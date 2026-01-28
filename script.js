@@ -6,7 +6,7 @@ const sortOptions = document.getElementById('sortOptions');
 const filterOptions = document.getElementById('filterOptions');
 // https://www.jsdelivr.com/tools/purge
 const zonesurls = [
-    "https://github.com/tg-math/tg-math/blob/main/zones.json"
+    "https://raw.githubusercontent.com/tg-math/tg-math/refs/heads/main/zones.json?token=GHSAT0AAAAAADUIK6HQXZHBEZB7BVCNGYWI2L2KUHQ"
 ];
 let zonesURL = zonesurls[Math.floor(Math.random() * zonesurls.length)];
 const coverURL = "https://cdn.jsdelivr.net/gh/gn-math/covers@main";
@@ -829,4 +829,5 @@ HTMLCanvasElement.prototype.toDataURL = function (...args) {
     return "";
 
 };
+
 
