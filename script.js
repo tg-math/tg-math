@@ -48,14 +48,40 @@ async function listZones() {
         
         console.log(`Cleaned text length: ${cleanedText.length}`);
         
+        // Try to fix common JSON issues
+        cleanedText = cleanedText.replace(/,\s*]/g, ']'); // Remove trailing commas in arrays
+        cleanedText = cleanedText.replace(/,\s*}/g, '}'); // Remove trailing commas in objects
+        cleanedText = cleanedText.replace(/"\s*,\s*""/g, '""'); // Fix empty string issues
+        
+        // Log the last 200 characters to see what's causing the issue
+        console.log('Last 200 chars:', cleanedText.substring(cleanedText.length - 200));
+        
         // Parse JSON
         try {
             zones = JSON.parse(cleanedText);
             console.log(`Successfully parsed JSON, items: ${zones.length}`);
         } catch (parseError) {
             console.error('JSON parse error:', parseError);
-            console.log('First 500 chars of response:', cleanedText.substring(0, 500));
-            throw new Error(`Failed to parse JSON: ${parseError.message}`);
+            
+            // Try to manually fix common issues
+            console.log('Attempting to fix JSON manually...');
+            
+            // Remove problematic last entry if it exists
+            const lastCommaIndex = cleanedText.lastIndexOf(',');
+            if (lastCommaIndex > cleanedText.lastIndexOf(']') - 50) {
+                // Likely an issue with the last entry
+                const beforeLastEntry = cleanedText.substring(0, cleanedText.lastIndexOf(','));
+                const fixedText = beforeLastEntry + ']';
+                try {
+                    zones = JSON.parse(fixedText);
+                    console.log(`Successfully parsed fixed JSON, items: ${zones.length}`);
+                } catch (secondError) {
+                    console.error('Second parse attempt failed:', secondError);
+                    throw new Error(`Failed to parse JSON even after cleanup: ${parseError.message}`);
+                }
+            } else {
+                throw new Error(`Failed to parse JSON: ${parseError.message}`);
+            }
         }
         
         if (!Array.isArray(zones) || zones.length === 0) {
@@ -846,5 +872,6 @@ XMLHttpRequest.prototype.open = function (method, url) {
 HTMLCanvasElement.prototype.toDataURL = function (...args) {
     return "";
 };
+
 
 
