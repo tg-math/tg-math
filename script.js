@@ -6,11 +6,96 @@ const searchBar = document.getElementById('searchBar');
 const sortOptions = document.getElementById('sortOptions');
 const filterOptions = document.getElementById('filterOptions');
 
-// https://www.jsdelivr.com/tools/purge
-const zonesurls = [
-    "https://raw.githubusercontent.com/tg-math/tg-math/refs/heads/main/zones.json?token=GHSAT0AAAAAADUIK6HQXZHBEZB7BVCNGYWI2L2KUHQ",
+// Multiple backup sources for zones data
+const zonesSources = [
+    "https://raw.githubusercontent.com/tg-math/tg-math/refs/heads/main/zones.json",
+    "https://cdn.jsdelivr.net/gh/gn-math/assets@main/zones.json",
+    "https://raw.githubusercontent.com/gn-math/assets/main/zones.json"
 ];
-let zonesURL = zonesurls[Math.floor(Math.random() * zonesurls.length)];
+
+// Default zones data - included directly in the code as backup
+const defaultZones = [
+    {
+        "id": -1,
+        "name": "[!] SUGGEST GAMES .gg/Kmk4BdXyeU",
+        "cover": "{COVER_URL}/dc.png",
+        "url": "https://discord.gg/Kmk4BdXyeU",
+        "featured": true
+    },
+    {
+        "id": 0,
+        "name": "Bowmasters",
+        "cover": "{COVER_URL}/0.png",
+        "url": "{HTML_URL}/0.html",
+        "author": "Azur Games, Playgendary",
+        "authorLink": "https://azurgames.com"
+    },
+    {
+        "id": 1,
+        "name": "OvO",
+        "cover": "{COVER_URL}/1.png",
+        "url": "{HTML_URL}/1-a.html",
+        "author": "Dedra Games",
+        "authorLink": "https://dedragames.com"
+    },
+    {
+        "id": 2,
+        "name": "OvO 2",
+        "cover": "{COVER_URL}/2.png",
+        "url": "{HTML_URL}/2e.html",
+        "author": "Dedra Games",
+        "authorLink": "https://dedragames.com"
+    },
+    {
+        "id": 3,
+        "name": "OvO 3 Dimensions",
+        "cover": "{COVER_URL}/3.png",
+        "url": "{HTML_URL}/3.html",
+        "author": "Dedra Games",
+        "authorLink": "https://dedragames.com"
+    },
+    {
+        "id": 4,
+        "name": "Gladihoppers",
+        "cover": "{COVER_URL}/4.png",
+        "url": "{HTML_URL}/4.html",
+        "author": "Dreamon Studios",
+        "authorLink": "https://dreamonstudios.itch.io/gladihoppers"
+    },
+    {
+        "id": 5,
+        "name": "Ice Dodo",
+        "cover": "{COVER_URL}/5.png",
+        "url": "{HTML_URL}/5.html",
+        "author": "Onionfist Studio",
+        "authorLink": "https://onionfist.com"
+    },
+    {
+        "id": 6,
+        "name": "Block Blast",
+        "cover": "{COVER_URL}/6.png",
+        "url": "{HTML_URL}/6.html",
+        "author": "reunbozdo",
+        "authorLink": "https://reunbozdo.github.io"
+    },
+    {
+        "id": 7,
+        "name": "Jetpack Joyride",
+        "cover": "{COVER_URL}/7.png",
+        "url": "{HTML_URL}/7.html",
+        "author": "Halfbrick Studios",
+        "authorLink": "https://www.halfbrick.com"
+    },
+    {
+        "id": 8,
+        "name": "Friday Night Funkin",
+        "cover": "{COVER_URL}/8.png",
+        "url": "{HTML_URL}/8-aad.html",
+        "author": "ninja-muffin24",
+        "authorLink": "https://ninja-muffin24.itch.io/funkin"
+    }
+];
+
 const coverURL = "https://cdn.jsdelivr.net/gh/gn-math/covers@main";
 const htmlURL = "https://cdn.jsdelivr.net/gh/gn-math/html@main";
 let zones = [];
@@ -24,54 +109,119 @@ function toTitleCase(str) {
   );
 }
 
+async function fetchWithTimeout(url, timeout = 5000) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        return response;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
+    }
+}
+
+async function tryFetchZonesFromSources() {
+    // Try each source with timeout
+    for (const source of zonesSources) {
+        try {
+            console.log(`Trying to fetch from: ${source}`);
+            const response = await fetchWithTimeout(source + "?t=" + Date.now(), 3000);
+            if (!response.ok) {
+                console.warn(`Failed to fetch from ${source}: ${response.status}`);
+                continue;
+            }
+            
+            const text = await response.text();
+            console.log(`Received data from ${source}, length: ${text.length}`);
+            
+            // Clean the text - remove any non-JSON content
+            const cleanedText = cleanJSONText(text);
+            console.log(`Cleaned text length: ${cleanedText.length}`);
+            
+            try {
+                const json = JSON.parse(cleanedText);
+                console.log(`Successfully parsed JSON from ${source}, items: ${json.length}`);
+                return json;
+            } catch (parseError) {
+                console.warn(`Failed to parse JSON from ${source}:`, parseError);
+                // Try to extract JSON from text if it's embedded
+                const extractedJSON = extractJSONFromText(text);
+                if (extractedJSON) {
+                    console.log(`Successfully extracted JSON from ${source}`);
+                    return extractedJSON;
+                }
+            }
+        } catch (error) {
+            console.warn(`Error fetching from ${source}:`, error.message);
+        }
+    }
+    
+    // If all sources fail, use default zones
+    console.log('Using default zones data');
+    return defaultZones;
+}
+
+function cleanJSONText(text) {
+    // Remove any non-JSON content before and after
+    const jsonStart = text.indexOf('[');
+    const jsonEnd = text.lastIndexOf(']');
+    
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+        return text.substring(jsonStart, jsonEnd + 1);
+    }
+    
+    // If no brackets found, try to clean the whole text
+    return text
+        .trim()
+        .replace(/^[^{[]*/, '')  // Remove non-JSON at start
+        .replace(/[^}\]]*$/, ''); // Remove non-JSON at end
+}
+
+function extractJSONFromText(text) {
+    // Try to find JSON array or object
+    const jsonRegex = /(\[.*\]|\{.*\})/s;
+    const match = text.match(jsonRegex);
+    
+    if (match) {
+        try {
+            return JSON.parse(match[0]);
+        } catch (e) {
+            console.warn('Failed to parse extracted JSON:', e);
+        }
+    }
+    
+    return null;
+}
+
 async function listZones() {
     try {
-      let sharesponse;
-      let shajson;
-      let sha;
-        try {
-          sharesponse = await fetch("https://api.github.com/repos/gn-math/assets/commits?t="+Date.now());
-        } catch (error) {}
-        if (sharesponse && sharesponse.status === 200) {
-          try {
-            shajson = await sharesponse.json();
-            sha = shajson[0]['sha'];
-            if (sha) {
-                zonesURL = `https://cdn.jsdelivr.net/gh/gn-math/assets@${sha}/zones.json`;
-            }
-          } catch (error) {
-            try {
-                let secondarysharesponse = await fetch("https://raw.githubusercontent.com/gn-math/xml/refs/heads/main/sha.txt?t="+Date.now());
-                if (secondarysharesponse && secondarysharesponse.status === 200) {
-                    sha = (await secondarysharesponse.text()).trim();
-                    if (sha) {
-                        zonesURL = `https://cdn.jsdelivr.net/gh/gn-math/assets@${sha}/zones.json`;
-                    }
-                }
-            } catch(error) {}
-          }
-        }
-        const response = await fetch(zonesURL+"?t="+Date.now());
-        const text = await response.text();
+        console.log('Starting to load zones...');
         
-        // Убираем лишние символы в конце JSON
-        const cleanedText = text.trim();
-        // Проверяем, что текст является валидным JSON
-        try {
-            const json = JSON.parse(cleanedText);
-            zones = json;
-        } catch (parseError) {
-            console.error('JSON parse error:', parseError);
-            console.log('First 500 chars of response:', cleanedText.substring(0, 500));
-            throw parseError;
+        // Try to fetch zones from available sources
+        zones = await tryFetchZonesFromSources();
+        
+        if (!zones || !Array.isArray(zones) || zones.length === 0) {
+            throw new Error('No valid zones data found');
         }
+        
+        console.log(`Loaded ${zones.length} zones`);
         
         zones[0].featured = true; // always gonna be the discord
-        await fetchPopularity();
+        
+        // Initialize popularity data
+        popularityData[0] = 0;
+        
+        // Process zones data
         sortZones();
+        
+        // Handle URL parameters
         const search = new URLSearchParams(window.location.search);
         const id = search.get('id');
         const embed = window.location.hash.includes("embed");
+        
         if (id) {
             const zone = zones.find(zone => zone.id + '' == id + '');
             if (zone) {
@@ -80,34 +230,11 @@ async function listZones() {
                         window.open(zone.url, "_blank");
                     } else {
                         const url = zone.url.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
-                        fetch(url+"?t="+Date.now()).then(response => response.text()).then(html => {
+                        try {
+                            const response = await fetch(url + "?t=" + Date.now());
+                            const html = await response.text();
                             document.documentElement.innerHTML = html;
-                            const popup = document.createElement("div");
-                            popup.style.position = "fixed";
-                            popup.style.bottom = "20px";
-                            popup.style.right = "20px";
-                            popup.style.backgroundColor = "#cce5ff";
-                            popup.style.color = "#004085";
-                            popup.style.padding = "10px";
-                            popup.style.border = "1px solid #b8daff";
-                            popup.style.borderRadius = "5px";
-                            popup.style.boxShadow = "0px 0px 10px rgba(0,0,0,0.1)";
-                            popup.style.fontFamily = "Arial, sans-serif";
-                            
-                            popup.innerHTML = `Play more games at <a href="https://tg-math.vercel.app/" target="_blank" style="color:#004085; font-weight:bold;">https://tg-math.vercel.app/</a>!`;
-                            
-                            const closeBtn = document.createElement("button");
-                            closeBtn.innerText = "?";
-                            closeBtn.style.marginLeft = "10px";
-                            closeBtn.style.background = "none";
-                            closeBtn.style.border = "none";
-                            closeBtn.style.cursor = "pointer";
-                            closeBtn.style.color = "#004085";
-                            closeBtn.style.fontWeight = "bold";
-                            
-                            closeBtn.onclick = () => popup.remove();
-                            popup.appendChild(closeBtn);
-                            document.body.appendChild(popup);
+                            // Add scripts back
                             document.documentElement.querySelectorAll('script').forEach(oldScript => {
                                 const newScript = document.createElement('script');
                                 if (oldScript.src) {
@@ -117,7 +244,9 @@ async function listZones() {
                                 }
                                 document.body.appendChild(newScript);
                             });
-                        }).catch(error => alert("Failed to load zone: " + error));
+                        } catch (error) {
+                            console.error('Failed to load zone:', error);
+                        }
                     }
                 } else {
                     openZone(zone);
@@ -125,8 +254,9 @@ async function listZones() {
             }
         }
 
+        // Extract all tags
         let alltags = [];
-        for (const obj of json) {
+        for (const obj of zones) {
             if (Array.isArray(obj.special)) {
                 alltags.push(...obj.special);
             }
@@ -145,9 +275,18 @@ async function listZones() {
             opt.textContent = toTitleCase(tag);
             filteroption.appendChild(opt);
         }
+        
+        console.log('Zones loaded successfully');
+        
     } catch (error) {
-        console.error(error);
-        container.innerHTML = `<div style="color: red; padding: 20px;">Error loading zones: ${error.message}. Please try refreshing the page.</div>`;
+        console.error('Error loading zones:', error);
+        container.innerHTML = `<div style="color: red; padding: 20px; text-align: center;">
+            <h3>Error loading zones</h3>
+            <p>${error.message}</p>
+            <button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Refresh Page
+            </button>
+        </div>`;
     }
 }
 
@@ -818,6 +957,7 @@ function closePopup() {
     document.getElementById('popupOverlay').style.display = "none";
 }
 
+// Start loading zones
 listZones();
 
 const schoolList = ["deledao", "goguardian", "lightspeed", "linewize", "securly", ".edu/"];
@@ -847,5 +987,4 @@ XMLHttpRequest.prototype.open = function (method, url) {
 
 HTMLCanvasElement.prototype.toDataURL = function (...args) {
     return "";
-
 };
