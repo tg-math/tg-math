@@ -1,9 +1,11 @@
+// script.js
 const container = document.getElementById('container');
 const zoneViewer = document.getElementById('zoneViewer');
 let zoneFrame = document.getElementById('zoneFrame');
 const searchBar = document.getElementById('searchBar');
 const sortOptions = document.getElementById('sortOptions');
 const filterOptions = document.getElementById('filterOptions');
+
 // https://www.jsdelivr.com/tools/purge
 const zonesurls = [
     "https://raw.githubusercontent.com/tg-math/tg-math/refs/heads/main/zones.json?token=GHSAT0AAAAAADUIK6HQXZHBEZB7BVCNGYWI2L2KUHQ",
@@ -14,12 +16,14 @@ const htmlURL = "https://cdn.jsdelivr.net/gh/gn-math/html@main";
 let zones = [];
 let popularityData = {};
 const featuredContainer = document.getElementById('featuredZones');
+
 function toTitleCase(str) {
   return str.replace(
     /\w\S*/g,
     text => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
   );
 }
+
 async function listZones() {
     try {
       let sharesponse;
@@ -48,8 +52,20 @@ async function listZones() {
           }
         }
         const response = await fetch(zonesURL+"?t="+Date.now());
-        const json = await response.json();
-        zones = json;
+        const text = await response.text();
+        
+        // Убираем лишние символы в конце JSON
+        const cleanedText = text.trim();
+        // Проверяем, что текст является валидным JSON
+        try {
+            const json = JSON.parse(cleanedText);
+            zones = json;
+        } catch (parseError) {
+            console.error('JSON parse error:', parseError);
+            console.log('First 500 chars of response:', cleanedText.substring(0, 500));
+            throw parseError;
+        }
+        
         zones[0].featured = true; // always gonna be the discord
         await fetchPopularity();
         sortZones();
@@ -131,9 +147,10 @@ async function listZones() {
         }
     } catch (error) {
         console.error(error);
-        container.innerHTML = `Error loading zones: ${error}`;
+        container.innerHTML = `<div style="color: red; padding: 20px;">Error loading zones: ${error.message}. Please try refreshing the page.</div>`;
     }
 }
+
 async function fetchPopularity() {
     try {
         const response = await fetch("https://data.jsdelivr.com/v1/stats/packages/gh/gn-math/html@main/files?period=year");
@@ -213,6 +230,7 @@ function displayFeaturedZones(featuredZones) {
         imageObserver.observe(img);
     });
 }
+
 function displayZones(zones) {
     container.innerHTML = "";
     zones.forEach((file, index) => {
@@ -579,6 +597,7 @@ function cloakIcon(url) {
     }
     document.head.appendChild(link);
 }
+
 function cloakName(string) {
     if ((string+"").trim().length === 0) {
         document.title = "gn-math";
@@ -798,6 +817,7 @@ function showZoneInfo() {
 function closePopup() {
     document.getElementById('popupOverlay').style.display = "none";
 }
+
 listZones();
 
 const schoolList = ["deledao", "goguardian", "lightspeed", "linewize", "securly", ".edu/"];
@@ -829,6 +849,3 @@ HTMLCanvasElement.prototype.toDataURL = function (...args) {
     return "";
 
 };
-
-
-
