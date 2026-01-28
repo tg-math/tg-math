@@ -7,7 +7,7 @@ const sortOptions = document.getElementById('sortOptions');
 const filterOptions = document.getElementById('filterOptions');
 
 // Single source for zones data
-const zonesURL = "https://raw.githubusercontent.com/tg-math/tg-math/refs/heads/main/zones.json";
+const zonesURL = "https://raw.githubusercontent.com/tg-math/tg-math/refs/heads/main/zones.json?token=GHSAT0AAAAAADUIK6HQN2RJ72BEH36LGLB22L2LQXQ";
 const coverURL = "https://cdn.jsdelivr.net/gh/gn-math/covers@main";
 const htmlURL = "https://cdn.jsdelivr.net/gh/gn-math/html@main";
 let zones = [];
@@ -846,3 +846,4 @@ XMLHttpRequest.prototype.open = function (method, url) {
 HTMLCanvasElement.prototype.toDataURL = function (...args) {
     return "";
 };
+
