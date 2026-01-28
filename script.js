@@ -6,96 +6,8 @@ const searchBar = document.getElementById('searchBar');
 const sortOptions = document.getElementById('sortOptions');
 const filterOptions = document.getElementById('filterOptions');
 
-// Multiple backup sources for zones data
-const zonesSources = [
-    "https://raw.githubusercontent.com/tg-math/tg-math/refs/heads/main/zones.json",
-    "https://cdn.jsdelivr.net/gh/gn-math/assets@main/zones.json",
-    "https://raw.githubusercontent.com/gn-math/assets/main/zones.json"
-];
-
-// Default zones data - included directly in the code as backup
-const defaultZones = [
-    {
-        "id": -1,
-        "name": "[!] SUGGEST GAMES .gg/Kmk4BdXyeU",
-        "cover": "{COVER_URL}/dc.png",
-        "url": "https://discord.gg/Kmk4BdXyeU",
-        "featured": true
-    },
-    {
-        "id": 0,
-        "name": "Bowmasters",
-        "cover": "{COVER_URL}/0.png",
-        "url": "{HTML_URL}/0.html",
-        "author": "Azur Games, Playgendary",
-        "authorLink": "https://azurgames.com"
-    },
-    {
-        "id": 1,
-        "name": "OvO",
-        "cover": "{COVER_URL}/1.png",
-        "url": "{HTML_URL}/1-a.html",
-        "author": "Dedra Games",
-        "authorLink": "https://dedragames.com"
-    },
-    {
-        "id": 2,
-        "name": "OvO 2",
-        "cover": "{COVER_URL}/2.png",
-        "url": "{HTML_URL}/2e.html",
-        "author": "Dedra Games",
-        "authorLink": "https://dedragames.com"
-    },
-    {
-        "id": 3,
-        "name": "OvO 3 Dimensions",
-        "cover": "{COVER_URL}/3.png",
-        "url": "{HTML_URL}/3.html",
-        "author": "Dedra Games",
-        "authorLink": "https://dedragames.com"
-    },
-    {
-        "id": 4,
-        "name": "Gladihoppers",
-        "cover": "{COVER_URL}/4.png",
-        "url": "{HTML_URL}/4.html",
-        "author": "Dreamon Studios",
-        "authorLink": "https://dreamonstudios.itch.io/gladihoppers"
-    },
-    {
-        "id": 5,
-        "name": "Ice Dodo",
-        "cover": "{COVER_URL}/5.png",
-        "url": "{HTML_URL}/5.html",
-        "author": "Onionfist Studio",
-        "authorLink": "https://onionfist.com"
-    },
-    {
-        "id": 6,
-        "name": "Block Blast",
-        "cover": "{COVER_URL}/6.png",
-        "url": "{HTML_URL}/6.html",
-        "author": "reunbozdo",
-        "authorLink": "https://reunbozdo.github.io"
-    },
-    {
-        "id": 7,
-        "name": "Jetpack Joyride",
-        "cover": "{COVER_URL}/7.png",
-        "url": "{HTML_URL}/7.html",
-        "author": "Halfbrick Studios",
-        "authorLink": "https://www.halfbrick.com"
-    },
-    {
-        "id": 8,
-        "name": "Friday Night Funkin",
-        "cover": "{COVER_URL}/8.png",
-        "url": "{HTML_URL}/8-aad.html",
-        "author": "ninja-muffin24",
-        "authorLink": "https://ninja-muffin24.itch.io/funkin"
-    }
-];
-
+// Single source for zones data
+const zonesURL = "https://raw.githubusercontent.com/tg-math/tg-math/refs/heads/main/zones.json";
 const coverURL = "https://cdn.jsdelivr.net/gh/gn-math/covers@main";
 const htmlURL = "https://cdn.jsdelivr.net/gh/gn-math/html@main";
 let zones = [];
@@ -109,107 +21,53 @@ function toTitleCase(str) {
   );
 }
 
-async function fetchWithTimeout(url, timeout = 5000) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-    
-    try {
-        const response = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        return response;
-    } catch (error) {
-        clearTimeout(timeoutId);
-        throw error;
-    }
-}
-
-async function tryFetchZonesFromSources() {
-    // Try each source with timeout
-    for (const source of zonesSources) {
-        try {
-            console.log(`Trying to fetch from: ${source}`);
-            const response = await fetchWithTimeout(source + "?t=" + Date.now(), 3000);
-            if (!response.ok) {
-                console.warn(`Failed to fetch from ${source}: ${response.status}`);
-                continue;
-            }
-            
-            const text = await response.text();
-            console.log(`Received data from ${source}, length: ${text.length}`);
-            
-            // Clean the text - remove any non-JSON content
-            const cleanedText = cleanJSONText(text);
-            console.log(`Cleaned text length: ${cleanedText.length}`);
-            
-            try {
-                const json = JSON.parse(cleanedText);
-                console.log(`Successfully parsed JSON from ${source}, items: ${json.length}`);
-                return json;
-            } catch (parseError) {
-                console.warn(`Failed to parse JSON from ${source}:`, parseError);
-                // Try to extract JSON from text if it's embedded
-                const extractedJSON = extractJSONFromText(text);
-                if (extractedJSON) {
-                    console.log(`Successfully extracted JSON from ${source}`);
-                    return extractedJSON;
-                }
-            }
-        } catch (error) {
-            console.warn(`Error fetching from ${source}:`, error.message);
-        }
-    }
-    
-    // If all sources fail, use default zones
-    console.log('Using default zones data');
-    return defaultZones;
-}
-
-function cleanJSONText(text) {
-    // Remove any non-JSON content before and after
-    const jsonStart = text.indexOf('[');
-    const jsonEnd = text.lastIndexOf(']');
-    
-    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-        return text.substring(jsonStart, jsonEnd + 1);
-    }
-    
-    // If no brackets found, try to clean the whole text
-    return text
-        .trim()
-        .replace(/^[^{[]*/, '')  // Remove non-JSON at start
-        .replace(/[^}\]]*$/, ''); // Remove non-JSON at end
-}
-
-function extractJSONFromText(text) {
-    // Try to find JSON array or object
-    const jsonRegex = /(\[.*\]|\{.*\})/s;
-    const match = text.match(jsonRegex);
-    
-    if (match) {
-        try {
-            return JSON.parse(match[0]);
-        } catch (e) {
-            console.warn('Failed to parse extracted JSON:', e);
-        }
-    }
-    
-    return null;
-}
-
 async function listZones() {
     try {
         console.log('Starting to load zones...');
         
-        // Try to fetch zones from available sources
-        zones = await tryFetchZonesFromSources();
+        // Fetch zones from the single source
+        const response = await fetch(zonesURL + "?t=" + Date.now());
         
-        if (!zones || !Array.isArray(zones) || zones.length === 0) {
+        if (!response.ok) {
+            throw new Error(`Failed to fetch zones: ${response.status} ${response.statusText}`);
+        }
+        
+        const text = await response.text();
+        console.log(`Received data, length: ${text.length}`);
+        
+        // Clean the text - remove any non-JSON content
+        let cleanedText = text.trim();
+        
+        // Try to find JSON array in the text
+        const jsonStart = cleanedText.indexOf('[');
+        const jsonEnd = cleanedText.lastIndexOf(']');
+        
+        if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+            cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
+        }
+        
+        console.log(`Cleaned text length: ${cleanedText.length}`);
+        
+        // Parse JSON
+        try {
+            zones = JSON.parse(cleanedText);
+            console.log(`Successfully parsed JSON, items: ${zones.length}`);
+        } catch (parseError) {
+            console.error('JSON parse error:', parseError);
+            console.log('First 500 chars of response:', cleanedText.substring(0, 500));
+            throw new Error(`Failed to parse JSON: ${parseError.message}`);
+        }
+        
+        if (!Array.isArray(zones) || zones.length === 0) {
             throw new Error('No valid zones data found');
         }
         
         console.log(`Loaded ${zones.length} zones`);
         
-        zones[0].featured = true; // always gonna be the discord
+        // Mark first zone as featured (discord invite)
+        if (zones.length > 0) {
+            zones[0].featured = true;
+        }
         
         // Initialize popularity data
         popularityData[0] = 0;
