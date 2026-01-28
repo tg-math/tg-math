@@ -2148,8 +2148,8 @@
     "name": "Chat Bot (A.|.I)",
     "cover": "{COVER_URL}/253.png",
     "url": "{HTML_URL}/253.html",
-    "author": "gn-math",
-    "authorLink": "https://gn-math.github.io",
+    "author": "tg-math",
+    "authorLink": "https://tg-math.github.io",
     "featured": true,
     "special": [
       "tools"
@@ -3134,7 +3134,7 @@
     "cover": "{COVER_URL}/366.png",
     "url": "{HTML_URL}/366.html",
     "author": "idfk",
-    "authorLink": "https://gn-math.github.io"
+    "authorLink": "https://tg-math.github.io"
   },
   {
     "id": 367,
@@ -3150,7 +3150,7 @@
     "cover": "{COVER_URL}/368.png",
     "url": "{HTML_URL}/368.html",
     "author": "idfk",
-    "authorLink": "https://gn-math.github.io"
+    "authorLink": "https://tg-math.github.io"
   },
   {
     "id": 369,
@@ -3627,8 +3627,8 @@
     "name": "Code Editor",
     "cover": "{COVER_URL}/429.png",
     "url": "{HTML_URL}/429.html",
-    "author": "gn-math",
-    "authorLink": "https://gn-math.github.io",
+    "author": "tg-math",
+    "authorLink": "https://tg-math.github.io",
     "special": [
       "tools"
     ]
@@ -5105,8 +5105,8 @@
     "name": "[!] COMMENTS",
     "cover": "{COVER_URL}/596-uu.png",
     "url": "{HTML_URL}/596-u.html",
-    "author": "gn-math",
-    "authorLink": "https://gn-math.github.io",
+    "author": "tg-math",
+    "authorLink": "https://tg-math.vercel.app",
     "featured": true,
     "special": [
       "tools"
