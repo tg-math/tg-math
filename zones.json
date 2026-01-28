@@ -1,5 +1,11 @@
 [
   {
+    "id": -1,
+    "name": "[!] tg-math",
+    "cover": "{COVER_URL}/dc.png",
+    "url": "https://tg-math.vercel.app/"
+  },
+  {
     "id": 0,
     "name": "Bowmasters",
     "cover": "{COVER_URL}/0.png",
