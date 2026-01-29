@@ -81,23 +81,26 @@
     <!-- Global Chat Container -->
     <div id="globalChat" class="chat-container">
         <div class="chat-header">
-            <h3>Global Chat</h3>
+            <h3>TG-Math Chat</h3>
             <div class="chat-header-buttons">
+                <button onclick="showOnlineUsers()" title="Online Users">👥</button>
+                <button onclick="shareChatLink()" title="Share Chat Link">🔗</button>
                 <button onclick="updateUsername()" title="Change Username">👤</button>
-                <button onclick="exportChat()" title="Export Chat">📥</button>
                 <button onclick="toggleChat()" class="chat-close">×</button>
             </div>
         </div>
         <div class="chat-messages" id="chatMessages">
-            <div class="system-message">Welcome to TG-Math Global Chat! Be respectful to others.</div>
-            <div class="system-message">Connecting to chat server...</div>
+            <div class="system-message">Welcome to TG-Math P2P Chat! Be respectful.</div>
+            <div class="system-message">Share the link with friends to chat together.</div>
         </div>
         <div class="chat-input-container">
-            <input type="text" id="chatInput" placeholder="Type your message..." maxlength="200" onkeypress="if(event.key === 'Enter') sendChatMessage()">
+            <input type="text" id="chatInput" placeholder="Type your message..." maxlength="200">
             <button id="sendMessage" onclick="sendChatMessage()">Send</button>
         </div>
         <div class="chat-info">
-            <span id="onlineCount">Online: 0</span>
+            <span id="onlineCount">Online: You</span>
+            <button onclick="debugChat()" title="Debug Chat" style="margin-right: 10px;">🐛</button>
+            <button onclick="exportChat()" title="Export Chat">📥</button>
             <button onclick="clearChat()" class="clear-chat">Clear</button>
         </div>
     </div>
@@ -158,7 +161,7 @@
             loadPrivacy();
         }
         
-        // Функции для управления скроллом
+        // Functions for scroll management
         function disableBodyScroll() {
             document.body.classList.add('no-scroll');
             document.documentElement.style.overflow = 'hidden';
@@ -209,11 +212,75 @@
             };
         }
         
-        // Initialize chat when page loads
+        // Chat helper functions
+        function shareChatLink() {
+            const url = new URL(window.location.href);
+            url.searchParams.set('chat', 'open');
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Join TG-Math Chat',
+                    text: 'Chat with me on TG-Math! Click the link and open chat.',
+                    url: url.toString()
+                });
+            } else {
+                navigator.clipboard.writeText(url.toString()).then(() => {
+                    alert('✅ Chat link copied to clipboard!\n\nSend this link to your friends:\n' + url.toString());
+                }).catch(err => {
+                    prompt('Copy this link to share with friends:', url.toString());
+                });
+            }
+        }
+        
+        function showOnlineUsers() {
+            const chatSystem = window.getChatSystem ? window.getChatSystem() : null;
+            if (!chatSystem) {
+                alert('Chat system not loaded yet');
+                return;
+            }
+            
+            const users = Array.from(chatSystem.activeUsers.values());
+            let message = '🟢 Online Users:\n\n';
+            
+            if (users.length === 0) {
+                message += 'Only you are online\nShare the link to invite friends!';
+            } else {
+                users.forEach(user => {
+                    const timeAgo = Math.floor((Date.now() - user.lastSeen) / 1000);
+                    const minutes = Math.floor(timeAgo / 60);
+                    const status = minutes < 1 ? 'now' : `${minutes}m ago`;
+                    message += `• ${user.name} (${status})\n`;
+                });
+                
+                message += `\nTotal: ${users.length} user${users.length !== 1 ? 's' : ''}`;
+            }
+            
+            alert(message);
+        }
+        
+        function debugChat() {
+            if (window.debugChat) {
+                window.debugChat();
+            } else {
+                alert('Debug function not available yet');
+            }
+        }
+        
+        // Auto-open chat if URL has parameter
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize chat system
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('chat') === 'open') {
+                setTimeout(() => {
+                    const chatContainer = document.getElementById('globalChat');
+                    if (chatContainer && !chatContainer.classList.contains('chat-open')) {
+                        toggleChat();
+                    }
+                }, 1500);
+            }
+            
+            // Initialize chat
             if (typeof initChat === 'function') {
-                setTimeout(initChat, 500);
+                setTimeout(initChat, 800);
             }
         });
     </script>
