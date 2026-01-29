@@ -12,9 +12,9 @@ class P2PChatSystem {
         this.maxUsers = 50;
         
         // Storage keys
-        this.chatStorageKey = 'tgmath_p2p_chat_v2';
-        this.usersStorageKey = 'tgmath_chat_users_v2';
-        this.syncStorageKey = 'tgmath_chat_sync';
+        this.chatStorageKey = 'tgmath_p2p_chat_v3';
+        this.usersStorageKey = 'tgmath_chat_users_v3';
+        this.syncStorageKey = 'tgmath_chat_sync_v3';
         
         this.init();
     }
@@ -33,8 +33,8 @@ class P2PChatSystem {
         setTimeout(() => {
             if (this.messages.length === 0) {
                 this.addSystemMessage('Welcome to TG-Math P2P Chat!');
-                this.addSystemMessage('This chat works without servers - messages are shared via localStorage');
-                this.addSystemMessage('Share the website URL with friends to chat together');
+                this.addSystemMessage('This chat works without servers');
+                this.addSystemMessage('Share the link with friends to chat together');
             }
         }, 1000);
     }
@@ -142,7 +142,7 @@ class P2PChatSystem {
                 messages: this.messages.slice(-this.maxMessages),
                 lastUpdated: Date.now(),
                 updatedBy: this.userId,
-                version: '2.0'
+                version: '3.0'
             };
             
             // Save to localStorage
@@ -171,30 +171,31 @@ class P2PChatSystem {
                 const chatData = JSON.parse(saved);
                 
                 if (chatData.messages && Array.isArray(chatData.messages)) {
-                    // Filter out very old messages (older than 24 hours)
-                    const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+                    // Filter out very old messages (older than 7 days)
+                    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
                     const freshMessages = chatData.messages.filter(msg => 
-                        msg.timestamp > oneDayAgo
+                        msg.timestamp > sevenDaysAgo
                     );
                     
                     // Merge with existing messages, avoiding duplicates
                     const existingIds = new Set(this.messages.map(m => m.id));
                     const newMessages = freshMessages.filter(msg => !existingIds.has(msg.id));
                     
-                    this.messages.push(...newMessages);
-                    
-                    // Sort by timestamp
-                    this.messages.sort((a, b) => a.timestamp - b.timestamp);
-                    
-                    // Keep within limit
-                    if (this.messages.length > this.maxMessages * 2) {
-                        this.messages = this.messages.slice(-this.maxMessages);
+                    if (newMessages.length > 0) {
+                        console.log('Loaded', newMessages.length, 'new messages');
+                        this.messages.push(...newMessages);
+                        
+                        // Sort by timestamp
+                        this.messages.sort((a, b) => a.timestamp - b.timestamp);
+                        
+                        // Keep within limit
+                        if (this.messages.length > this.maxMessages * 2) {
+                            this.messages = this.messages.slice(-this.maxMessages);
+                        }
+                        
+                        // Display all loaded messages
+                        this.displayAllMessages();
                     }
-                    
-                    console.log('Loaded', newMessages.length, 'new messages');
-                    
-                    // Display all loaded messages
-                    this.displayAllMessages();
                 }
             }
         } catch (error) {
@@ -370,11 +371,12 @@ class P2PChatSystem {
             });
             
             const isOwnMessage = message.userId === this.userId;
-            const messageClass = isOwnMessage ? 'own-message' : '';
+            
+            messageDiv.className += isOwnMessage ? ' own-message' : '';
             
             messageDiv.innerHTML = `
                 <div class="message-header">
-                    <span class="message-user ${messageClass}" style="color: ${message.color}">
+                    <span class="message-user" style="color: ${message.color}">
                         ${this.escapeHtml(message.userName)} ${isOwnMessage ? ' (You)' : ''}
                     </span>
                     <span class="message-time">${time}</span>
@@ -678,7 +680,7 @@ function exportChat() {
     const chatData = {
         exportDate: new Date().toISOString(),
         exportType: 'TG-Math P2P Chat',
-        version: '2.0',
+        version: '3.0',
         messages: chatSystem.messages,
         totalMessages: chatSystem.messages.length,
         userName: chatSystem.userName,
@@ -765,3 +767,4 @@ document.addEventListener('DOMContentLoaded', function() {
 // Add debug function to window
 window.debugChat = debugChat;
 window.getChatSystem = () => chatSystem;
+window.initChat = initChat;
