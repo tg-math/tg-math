@@ -1,4 +1,4 @@
-:root {
+        :root {
     --primary: #fc2651;
     --primary-hover: #e91e47;
     --primary-light: rgba(252, 38, 81, 0.1);
@@ -77,14 +77,6 @@ body {
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-}
-
-/* Блокировка скролла при открытых модальных окнах */
-body.no-scroll {
-    overflow: hidden !important;
-    height: 100vh;
-    position: fixed;
-    width: 100%;
 }
 
 header {
@@ -196,43 +188,6 @@ header {
 .control-buttons {
     display: flex;
     gap: 0.5rem;
-}
-
-.control-button {
-    background: rgba(255, 255, 255, 0.1);
-    border: 0;
-    color: white;
-    cursor: pointer;
-    padding: 0;
-    width: 44px;
-    height: 44px;
-    border-radius: var(--radius);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(20px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-}
-
-.control-button:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-}
-
-.control-button:active {
-    transform: translateY(0);
-}
-
-.control-button img {
-    transition: transform 0.4s ease;
-    width: 24px;
-    height: 24px;
-}
-
-.control-button:hover img {
-    transform: rotate(40deg);
 }
 
 main {
@@ -347,10 +302,6 @@ main {
     animation: slideInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-#zoneViewer.active {
-    display: flex;
-}
-
 @keyframes slideInUp {
     from {
         transform: translateY(100%);
@@ -427,8 +378,8 @@ main {
 #zoneFrame {
     flex-grow: 1;
     border: none;
-    width: 100%;
-    height: calc(100vh - 70px);
+    width: 90%;
+    height: 90%;
 }
 
 #popupOverlay {
@@ -442,10 +393,6 @@ main {
     z-index: 2000;
     padding: 1rem;
     animation: fadeIn 0.3s ease;
-}
-
-#popupOverlay.active {
-    display: flex;
 }
 
 @keyframes fadeIn {
@@ -552,6 +499,7 @@ footer {
     border-top: 1px solid var(--border);
     padding: 1rem 1rem;
     text-align: center;
+
     position: fixed;
     bottom: 0;
     left: 0;
@@ -629,6 +577,69 @@ footer {
     .zone-item:hover {
         transform: translateY(-10px) scale(1.01);
     }
+
+}
+.control-button img {
+    transition: transform 0.4s ease;
+    width: 24px;
+    height: 24px;
+}
+
+.control-button:hover img {
+    transform: rotate(40deg);
+}
+
+.control-button,
+.control-button:hover {
+    box-shadow: none;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+.control-button:active {
+    transform: translateY(0);
+}
+
+.control-buttons button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 0;
+    color: white;
+    cursor: pointer;
+    padding: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(20px);
+}
+.control-buttons button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+.settings-button {
+    background: var(--gradient-primary);
+    color: white;
+    border: 0;
+    padding: 0.875rem 1.5rem;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
+    min-width: 200px;
+    width: 100%;
+    text-align: center;
+}
+
+.settings-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.settings-button:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
 }
 
 .info-button {
@@ -660,4 +671,3 @@ footer {
 .info-button svg {
     display: block;
 }
-
