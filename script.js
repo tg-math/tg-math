@@ -4,131 +4,61 @@ let zoneFrame = document.getElementById('zoneFrame');
 const searchBar = document.getElementById('searchBar');
 const sortOptions = document.getElementById('sortOptions');
 const filterOptions = document.getElementById('filterOptions');
-
-const zonesURLs = [
-    "https://raw.githubusercontent.com/tg-math/tg-math/refs/heads/main/zones.json",
+// https://www.jsdelivr.com/tools/purge
+const zonesurls = [
+    "https://cdn.jsdelivr.net/%67%68/%67%6e%2d%6d%61%74%68/%61%73%73%65%74%73@%6d%61%69%6e/%7a%6f%6e%65%73%2e%6a%73%6f%6e",
     "https://cdn.jsdelivr.net/gh/gn-math/assets@latest/zones.json",
     "https://cdn.jsdelivr.net/gh/gn-math/assets@master/zones.json",
     "https://cdn.jsdelivr.net/gh/gn-math/assets/zones.json"
 ];
-
+let zonesURL = zonesurls[Math.floor(Math.random() * zonesurls.length)];
 const coverURL = "https://cdn.jsdelivr.net/gh/gn-math/covers@main";
 const htmlURL = "https://cdn.jsdelivr.net/gh/gn-math/html@main";
 let zones = [];
 let popularityData = {};
 const featuredContainer = document.getElementById('featuredZones');
-
 function toTitleCase(str) {
   return str.replace(
     /\w\S*/g,
     text => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
   );
 }
-
-async function fetchFromURL(url) {
-    try {
-        const response = await fetch(url + "?t=" + Date.now());
-        if (!response.ok) {
-            throw new Error(`Failed to fetch: ${response.status}`);
-        }
-        const text = await response.text();
-        return text;
-    } catch (error) {
-        console.error(`Error fetching from ${url}:`, error.message);
-        return null;
-    }
-}
-
-async function parseZonesData(text) {
-    if (!text) return null;
-    
-    try {
-        let cleanedText = text.trim();
-        const jsonStart = cleanedText.indexOf('[');
-        const jsonEnd = cleanedText.lastIndexOf(']');
-        
-        if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-            cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
-        }
-        
-        cleanedText = cleanedText.replace(/,\s*]/g, ']');
-        cleanedText = cleanedText.replace(/,\s*}/g, '}');
-        cleanedText = cleanedText.replace(/\\'/g, "'");
-        cleanedText = cleanedText.replace(/\\"/g, '"');
-        
-        const parsedData = JSON.parse(cleanedText);
-        
-        if (!Array.isArray(parsedData) || parsedData.length === 0) {
-            throw new Error('Parsed data is not a valid array or is empty');
-        }
-        
-        console.log(`Successfully parsed zones data with ${parsedData.length} items`);
-        return parsedData;
-    } catch (parseError) {
-        console.error('JSON parse error:', parseError);
-        
-        try {
-            const jsonMatch = text.match(/\[[\s\S]*\]/);
-            if (jsonMatch) {
-                const alternativeText = jsonMatch[0];
-                const parsed = JSON.parse(alternativeText);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    console.log(`Alternative parse successful with ${parsed.length} items`);
-                    return parsed;
-                }
-            }
-        } catch (secondError) {
-            console.error('Alternative parse also failed:', secondError);
-        }
-        
-        throw new Error(`Failed to parse zones data: ${parseError.message}`);
-    }
-}
-
 async function listZones() {
     try {
-        console.log('Starting to load zones from multiple sources...');
-        
-        let zonesData = null;
-        let lastError = null;
-        
-        for (let i = 0; i < zonesURLs.length; i++) {
-            const url = zonesURLs[i];
-            console.log(`Trying source ${i + 1}: ${url}`);
-            
+      let sharesponse;
+      let shajson;
+      let sha;
+        try {
+          sharesponse = await fetch("https://api.github.com/repos/gn-math/assets/commits?t="+Date.now());
+        } catch (error) {}
+        if (sharesponse && sharesponse.status === 200) {
+          try {
+            shajson = await sharesponse.json();
+            sha = shajson[0]['sha'];
+            if (sha) {
+                zonesURL = `https://cdn.jsdelivr.net/gh/gn-math/assets@${sha}/zones.json`;
+            }
+          } catch (error) {
             try {
-                const text = await fetchFromURL(url);
-                if (text) {
-                    zonesData = await parseZonesData(text);
-                    if (zonesData) {
-                        console.log(`Successfully loaded zones from source ${i + 1}`);
-                        break;
+                let secondarysharesponse = await fetch("https://raw.githubusercontent.com/gn-math/xml/refs/heads/main/sha.txt?t="+Date.now());
+                if (secondarysharesponse && secondarysharesponse.status === 200) {
+                    sha = (await secondarysharesponse.text()).trim();
+                    if (sha) {
+                        zonesURL = `https://cdn.jsdelivr.net/gh/gn-math/assets@${sha}/zones.json`;
                     }
                 }
-            } catch (error) {
-                lastError = error;
-                console.log(`Source ${i + 1} failed:`, error.message);
-            }
+            } catch(error) {}
+          }
         }
-        
-        if (!zonesData) {
-            throw new Error(lastError || 'All zone sources failed');
-        }
-        
-        zones = zonesData;
-        console.log(`Loaded ${zones.length} zones`);
-        
-        if (zones.length > 0) {
-            zones[0].featured = true;
-        }
-        
-        popularityData[0] = 0;
+        const response = await fetch(zonesURL+"?t="+Date.now());
+        const json = await response.json();
+        zones = json;
+        zones[0].featured = true; // always gonna be the discord
+        await fetchPopularity();
         sortZones();
-        
         const search = new URLSearchParams(window.location.search);
         const id = search.get('id');
         const embed = window.location.hash.includes("embed");
-        
         if (id) {
             const zone = zones.find(zone => zone.id + '' == id + '');
             if (zone) {
@@ -137,10 +67,34 @@ async function listZones() {
                         window.open(zone.url, "_blank");
                     } else {
                         const url = zone.url.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
-                        try {
-                            const response = await fetch(url + "?t=" + Date.now());
-                            const html = await response.text();
+                        fetch(url+"?t="+Date.now()).then(response => response.text()).then(html => {
                             document.documentElement.innerHTML = html;
+                            const popup = document.createElement("div");
+                            popup.style.position = "fixed";
+                            popup.style.bottom = "20px";
+                            popup.style.right = "20px";
+                            popup.style.backgroundColor = "#cce5ff";
+                            popup.style.color = "#004085";
+                            popup.style.padding = "10px";
+                            popup.style.border = "1px solid #b8daff";
+                            popup.style.borderRadius = "5px";
+                            popup.style.boxShadow = "0px 0px 10px rgba(0,0,0,0.1)";
+                            popup.style.fontFamily = "Arial, sans-serif";
+                            
+                            popup.innerHTML = `Play more games at <a href="https://gn-math.github.io" target="_blank" style="color:#004085; font-weight:bold;">https://gn-math.github.io</a>!`;
+                            
+                            const closeBtn = document.createElement("button");
+                            closeBtn.innerText = "?";
+                            closeBtn.style.marginLeft = "10px";
+                            closeBtn.style.background = "none";
+                            closeBtn.style.border = "none";
+                            closeBtn.style.cursor = "pointer";
+                            closeBtn.style.color = "#004085";
+                            closeBtn.style.fontWeight = "bold";
+                            
+                            closeBtn.onclick = () => popup.remove();
+                            popup.appendChild(closeBtn);
+                            document.body.appendChild(popup);
                             document.documentElement.querySelectorAll('script').forEach(oldScript => {
                                 const newScript = document.createElement('script');
                                 if (oldScript.src) {
@@ -150,9 +104,7 @@ async function listZones() {
                                 }
                                 document.body.appendChild(newScript);
                             });
-                        } catch (error) {
-                            console.error('Failed to load zone:', error);
-                        }
+                        }).catch(error => alert("Failed to load zone: " + error));
                     }
                 } else {
                     openZone(zone);
@@ -161,7 +113,7 @@ async function listZones() {
         }
 
         let alltags = [];
-        for (const obj of zones) {
+        for (const obj of json) {
             if (Array.isArray(obj.special)) {
                 alltags.push(...obj.special);
             }
@@ -180,22 +132,11 @@ async function listZones() {
             opt.textContent = toTitleCase(tag);
             filteroption.appendChild(opt);
         }
-        
-        console.log('Zones loaded successfully');
-        
     } catch (error) {
-        console.error('Error loading zones:', error);
-        container.innerHTML = `<div style="color: red; padding: 20px; text-align: center;">
-            <h3>Error loading zones</h3>
-            <p>${error.message}</p>
-            <p>Tried ${zonesURLs.length} sources, all failed.</p>
-            <button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                Refresh Page
-            </button>
-        </div>`;
+        console.error(error);
+        container.innerHTML = `Error loading zones: ${error}`;
     }
 }
-
 async function fetchPopularity() {
     try {
         const response = await fetch("https://data.jsdelivr.com/v1/stats/packages/gh/gn-math/html@main/files?period=year");
@@ -275,7 +216,6 @@ function displayFeaturedZones(featuredZones) {
         imageObserver.observe(img);
     });
 }
-
 function displayZones(zones) {
     container.innerHTML = "";
     zones.forEach((file, index) => {
@@ -346,65 +286,31 @@ function filterZones() {
 }
 
 function openZone(file) {
-    try {
-        let url;
-        
-        if (file.url.startsWith("http")) {
-            if (file.url.includes("discord.gg") || file.id === -1) {
-                window.open(file.url, "_blank");
-                return;
+    if (file.url.startsWith("http")) {
+        window.open(file.url, "_blank");
+    } else {
+        const url = file.url.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
+        fetch(url+"?t="+Date.now()).then(response => response.text()).then(html => {
+            if (zoneFrame.contentDocument === null) {
+                zoneFrame = document.createElement("iframe");
+                zoneFrame.id = "zoneFrame";
+                zoneViewer.appendChild(zoneFrame);
             }
-            url = file.url;
-        } else {
-            url = file.url.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
-        }
-        
-        if (!zoneFrame || zoneFrame.contentDocument === null) {
-            zoneFrame = document.createElement("iframe");
-            zoneFrame.id = "zoneFrame";
-            zoneFrame.style.width = "100%";
-            zoneFrame.style.height = "calc(100% - 60px)";
-            zoneFrame.style.border = "none";
-            zoneFrame.style.background = "white";
-            zoneViewer.innerHTML = '';
-            zoneViewer.appendChild(zoneFrame);
-        }
-        
-        zoneFrame.src = url + "?t=" + Date.now();
-        
-        document.getElementById('zoneName').textContent = file.name;
-        document.getElementById('zoneId').textContent = file.id;
-        document.getElementById('zoneAuthor').textContent = "by " + (file.author || "Unknown");
-        if (file.authorLink) {
-            document.getElementById('zoneAuthor').href = file.authorLink;
-        } else {
-            document.getElementById('zoneAuthor').removeAttribute('href');
-        }
-        
-        zoneViewer.style.display = "block";
-        zoneViewer.classList.add('active');
-        
-        const urlParams = new URL(window.location);
-        urlParams.searchParams.set('id', file.id);
-        history.pushState(null, '', urlParams.toString());
-        
-        zoneFrame.onload = function() {
-            console.log('Zone loaded successfully:', file.name);
-        };
-        
-        zoneFrame.onerror = function() {
-            console.error('Failed to load zone in iframe:', file.name);
-            window.open(url, "_blank");
-            zoneViewer.style.display = "none";
-            zoneViewer.classList.remove('active');
-        };
-        
-    } catch (error) {
-        console.error('Error opening zone:', error);
-        const url = file.url.startsWith("http") 
-            ? file.url 
-            : file.url.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
-        window.open(url, "_blank");
+            zoneFrame.contentDocument.open();
+            zoneFrame.contentDocument.write(html);
+            zoneFrame.contentDocument.close();
+            document.getElementById('zoneName').textContent = file.name;
+            document.getElementById('zoneId').textContent = file.id;
+            document.getElementById('zoneAuthor').textContent = "by " + file.author;
+            if (file.authorLink) {
+                document.getElementById('zoneAuthor').href = file.authorLink;
+            }
+            zoneViewer.style.display = "block";
+            const url = new URL(window.location);
+            url.searchParams.set('id', file.id);
+            history.pushState(null, '', url.toString());
+            zoneViewer.hidden = true;
+        }).catch(error => alert("Failed to load zone: " + error));
     }
 }
 
@@ -421,11 +327,9 @@ function aboutBlank() {
 }
 
 function closeZone() {
+    zoneViewer.hidden = false;
     zoneViewer.style.display = "none";
-    zoneViewer.classList.remove('active');
-    if (zoneFrame) {
-        zoneFrame.src = "about:blank";
-    }
+    zoneViewer.removeChild(zoneFrame);
     const url = new URL(window.location);
     url.searchParams.delete('id');
     history.pushState(null, '', url.toString());
@@ -635,7 +539,7 @@ async function saveData() {
           if (data.caches) {
             for (const cacheName in data.caches) {
               const cache = await caches.open(cacheName);
-              await cache.keys().then(keys => Promise.all(keys.map(k => cache.delete(k))));
+              await cache.keys().then(keys => Promise.all(keys.map(k => cache.delete(k)))); // clear existing
         
               for (const entry of data.caches[cacheName]) {
                 let responseBody;
@@ -678,10 +582,9 @@ function cloakIcon(url) {
     }
     document.head.appendChild(link);
 }
-
 function cloakName(string) {
     if ((string+"").trim().length === 0) {
-        document.title = "tg-math";
+        document.title = "gn-math";
         return;
     }
     document.title = string;
@@ -704,27 +607,25 @@ function tabCloak() {
 }
 
 const settings = document.getElementById('settings');
-if (settings) {
-    settings.addEventListener('click', () => {
-        document.getElementById('popupTitle').textContent = "Settings";
-        const popupBody = document.getElementById('popupBody');
-        popupBody.innerHTML = `
-        <button class="settings-button" onclick="darkMode()">Toggle Dark Mode</button>
-        <br><br>
-        <button class="settings-button" onclick="tabCloak()">Tab Cloak</button>
-        <br>
-        `;
-        popupBody.contentEditable = false;
-        document.getElementById('popupOverlay').style.display = "flex";
-    });
-}
+settings.addEventListener('click', () => {
+    document.getElementById('popupTitle').textContent = "Settings";
+    const popupBody = document.getElementById('popupBody');
+    popupBody.innerHTML = `
+    <button class="settings-button" onclick="darkMode()">Toggle Dark Mode</button>
+    <br><br>
+    <button class="settings-button" onclick="tabCloak()">Tab Cloak</button>
+    <br>
+    `;
+    popupBody.contentEditable = false;
+    document.getElementById('popupOverlay').style.display = "flex";
+});
 
 function showContact() {
     document.getElementById('popupTitle').textContent = "Contact";
     const popupBody = document.getElementById('popupBody');
     popupBody.innerHTML = `
-    <p>Discord: </p>
-    <p>Email: </p>`;
+    <p>Discord: https://discord.gg/NAFw4ykZ7n</p>
+    <p>Email: gn.math.business@gmail.com</p>`;
     popupBody.contentEditable = false;
     document.getElementById('popupOverlay').style.display = "flex";
 }
@@ -736,12 +637,12 @@ function loadPrivacy() {
         <div style="max-height: 60vh; overflow-y: auto;">
             <h2>PRIVACY POLICY</h2>
             <p>Last updated April 17, 2025</p>
-            <p>This Privacy Notice for tg-math ("we," "us," or "our"), describes how and why we might access, collect, store, use, and/or share ("process") your personal information when you use our services ("Services"), including when you:</p>
+            <p>This Privacy Notice for gn-math ("we," "us," or "our"), describes how and why we might access, collect, store, use, and/or share ("process") your personal information when you use our services ("Services"), including when you:</p>
             <ul>
-                <li>Visit our website at <a href="https://tg-math.vercel.app/">https://tg-math.vercel.app/</a>, or any website of ours that links to this Privacy Notice</li>
+                <li>Visit our website at <a href="https://gn-math.github.io">https://gn-math.github.io</a>, or any website of ours that links to this Privacy Notice</li>
                 <li>Engage with us in other related ways, including any sales, marketing, or events</li>
             </ul>
-            <p>Questions or concerns? Reading this Privacy Notice will help you understand your privacy rights and choices. We are responsible for making decisions about how your personal information is processed. If you do not agree with our policies and practices, please do not use our Services. If you still have any questions or concerns, please contact us.</p>
+            <p>Questions or concerns? Reading this Privacy Notice will help you understand your privacy rights and choices. We are responsible for making decisions about how your personal information is processed. If you do not agree with our policies and practices, please do not use our Services. If you still have any questions or concerns, please contact us at <a href="https://discord.gg/NAFw4ykZ7n">https://discord.gg/NAFw4ykZ7n</a>.</p>
             
             <h3>SUMMARY OF KEY POINTS</h3>
             <p>This summary provides key points from our Privacy Notice, but you can find out more details about any of these topics by clicking the link following each key point or by using our table of contents below to find the section you are looking for.</p>
@@ -773,18 +674,20 @@ function loadDMCA() {
     popupBody.innerHTML = `
         <div class="dmca-content">
             <p>
-                If you own or developed a game that is on <strong>tg-math</strong> 
+                If you own or developed a game that is on <strong>gn-math</strong> 
                 and would like it removed, please do one of the following:
             </p>
             <ol>
                 <li>
-                    <a href="https://tg-math.vercel.app/" target="_blank" rel="noopener noreferrer">
-                        Visit our website
-                    </a> for contact information
+                    <a href="https://discord.gg/D4c9VFYWyU" target="_blank" rel="noopener noreferrer">
+                        Join the Discord
+                    </a> and DM <strong>breadbb</strong> or ping me in a public channel 
                     <strong>[INSTANT RESPONSE]</strong>
                 </li>
                 <li>
-                    Contact us with the subject starting with <code>!DMCA</code>.
+                    Email me at 
+                    <a href="mailto:gn.math.business@gmail.com">gn.math.business@gmail.com</a> 
+                    with the subject starting with <code>!DMCA</code>.
                     <strong>[DELAYED RESPONSE]</strong>
                 </li>
             </ol>
@@ -870,19 +773,19 @@ function showZoneInfo() {
     popupBody.innerHTML = `<p>Loading...</p>`
     popupBody.contentEditable = false;
     document.getElementById('popupOverlay').style.display = "flex";
-    fetch(`https://api.github.com/repos/tg-math/html/commits?path=${id}.html`).then(res => res.json()).then(async json => {
+    fetch(`https://api.github.com/repos/gn-math/html/commits?path=${id}.html`).then(res => res.json()).then(async json => {
         let stats = await getStats (id);
         idjson = zones.filter(a=>a.id===id)[0]
         document.getElementById('popupTitle').textContent = `${idjson.name} Info`;
         const date = new Date(json.at(-1).commit.author.date);
         let formatteddate = new Intl.DateTimeFormat("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true
-    }).format(date);
+  month: "long",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true
+}).format(date);
         popupBody.innerHTML = `
         <p>
         <b>Id</b>: ${id}<br>
@@ -890,7 +793,7 @@ function showZoneInfo() {
         ${idjson.author?`<b>Game Author</b>: ${idjson.author}<br>`:""}
         ${idjson.authorLink?`<b>Game Author Link</b>: <a style="color:#FFFF00;" href=${idjson.authorLink}>${idjson.authorLink}</a><br>`:""}
         ${idjson.special?`<b>Tags</b>: ${idjson.special}<br>`:""}
-        <b>Tg-Math Adder</b>: ${json.at(-1).commit.author.name}<br>
+        <b>Gn-Math Adder</b>: ${json.at(-1).commit.author.name}<br>
         <b>Date Added</b>: ${formatteddate}<br>
         <b>Times Played (Globally)</b>: ${Number(stats).toLocaleString("en-US")}
         </p>`;
@@ -900,7 +803,6 @@ function showZoneInfo() {
 function closePopup() {
     document.getElementById('popupOverlay').style.display = "none";
 }
-
 listZones();
 
 const schoolList = ["deledao", "goguardian", "lightspeed", "linewize", "securly", ".edu/"];
@@ -931,4 +833,3 @@ XMLHttpRequest.prototype.open = function (method, url) {
 HTMLCanvasElement.prototype.toDataURL = function (...args) {
     return "";
 };
-
