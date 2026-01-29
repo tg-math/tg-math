@@ -7,13 +7,13 @@ const filterOptions = document.getElementById('filterOptions');
 
 const zonesURLs = [
     "https://raw.githubusercontent.com/tg-math/tg-math/refs/heads/main/zones.json",
-    "https://cdn.jsdelivr.net/gh/tg-math/assets@latest/zones.json",
-    "https://cdn.jsdelivr.net/gh/tg-math/assets@master/zones.json",
-    "https://cdn.jsdelivr.net/gh/tg-math/assets/zones.json"
+    "https://cdn.jsdelivr.net/gh/gn-math/assets@latest/zones.json",
+    "https://cdn.jsdelivr.net/gh/gn-math/assets@master/zones.json",
+    "https://cdn.jsdelivr.net/gh/gn-math/assets/zones.json"
 ];
 
-const coverURL = "https://cdn.jsdelivr.net/gh/tg-math/covers@main";
-const htmlURL = "https://cdn.jsdelivr.net/gh/tg-math/html@main";
+const coverURL = "https://cdn.jsdelivr.net/gh/gn-math/covers@main";
+const htmlURL = "https://cdn.jsdelivr.net/gh/gn-math/html@main";
 let zones = [];
 let popularityData = {};
 const featuredContainer = document.getElementById('featuredZones');
@@ -198,7 +198,7 @@ async function listZones() {
 
 async function fetchPopularity() {
     try {
-        const response = await fetch("https://data.jsdelivr.com/v1/stats/packages/gh/tg-math/html@main/files?period=year");
+        const response = await fetch("https://data.jsdelivr.com/v1/stats/packages/gh/gn-math/html@main/files?period=year");
         const data = await response.json();
         data.forEach(file => {
             const idMatch = file.name.match(/\/(\d+)\.html$/);
@@ -805,7 +805,7 @@ async function getAllStats() {
   }
 
   const BASE_URL =
-    "https://data.jsdelivr.com/v1/stats/packages/gh/tg-math/html@main/files";
+    "https://data.jsdelivr.com/v1/stats/packages/gh/gn-math/html@main/files";
   const PERIOD = "year";
   const PAGE_BATCH = 5;
 
@@ -931,3 +931,4 @@ XMLHttpRequest.prototype.open = function (method, url) {
 HTMLCanvasElement.prototype.toDataURL = function (...args) {
     return "";
 };
+
