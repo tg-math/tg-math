@@ -14,9 +14,7 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-WX5VS54ZDW"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
-        function gtag() {
-            dataLayer.push(arguments);
-        }
+        function gtag() { dataLayer.push(arguments); }
         gtag('js', new Date());
         gtag('config', 'G-WX5VS54ZDW');
     </script>
@@ -36,148 +34,6 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#fb2651">
-    <style>
-        /* Add chat styles directly to avoid missing CSS */
-        .chat-container {
-            position: fixed;
-            right: -400px;
-            top: 80px;
-            width: 350px;
-            height: calc(100vh - 100px);
-            background: #1e1e1e;
-            border-left: 2px solid #fb2651;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.3);
-            transition: right 0.3s ease;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            border-radius: 10px 0 0 10px;
-        }
-        
-        .chat-container.chat-open {
-            right: 0;
-        }
-        
-        .chat-header {
-            background: #fb2651;
-            color: white;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-radius: 10px 0 0 0;
-        }
-        
-        .chat-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            line-height: 1;
-        }
-        
-        .chat-messages {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-            background: #2d2d2d;
-        }
-        
-        .chat-message {
-            background: #3d3d3d;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            border-left: 3px solid #fb2651;
-        }
-        
-        .system-message {
-            background: #2a2a2a;
-            color: #ff9900;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            border-left: 3px solid #ff9900;
-            font-style: italic;
-        }
-        
-        .message-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-            font-size: 0.9em;
-        }
-        
-        .message-user {
-            font-weight: bold;
-        }
-        
-        .message-time {
-            color: #999;
-            font-size: 0.8em;
-        }
-        
-        .message-content {
-            word-wrap: break-word;
-        }
-        
-        .chat-input-container {
-            padding: 15px;
-            background: #1e1e1e;
-            border-top: 1px solid #333;
-            display: flex;
-            gap: 10px;
-        }
-        
-        .chat-input-container input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #555;
-            border-radius: 5px;
-            background: #2d2d2d;
-            color: white;
-        }
-        
-        .chat-input-container button {
-            padding: 10px 20px;
-            background: #fb2651;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        
-        .chat-info {
-            padding: 10px 15px;
-            background: #1e1e1e;
-            border-top: 1px solid #333;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.9em;
-            color: #aaa;
-        }
-        
-        .clear-chat {
-            background: #555;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 0.8em;
-        }
-        
-        .clear-chat:hover {
-            background: #777;
-        }
-        
-        /* No scroll class */
-        .no-scroll {
-            overflow: hidden;
-        }
-    </style>
 </head>
 <body class="dark-mode">
     <header>
@@ -201,7 +57,7 @@
                 <button id="chat-button" class="control-button" title="Global Chat" onclick="toggleChat()">
                     <img src="chat.png" alt="chat" style="width: 20px; height: 20px;">
                 </button>
-                <button id="settings" class="control-button" title="Settings!" onclick="showSettings()">
+                <button id="settings" class="control-button" title="Settings!" onclick="openSettings()">
                     <img src="setting.png" alt="settings">
                 </button>
             </div>
@@ -226,177 +82,142 @@
     <div id="globalChat" class="chat-container">
         <div class="chat-header">
             <h3>Global Chat</h3>
-            <button class="chat-close" onclick="toggleChat()">×</button>
+            <div class="chat-header-buttons">
+                <button onclick="updateUsername()" title="Change Username">👤</button>
+                <button onclick="exportChat()" title="Export Chat">📥</button>
+                <button onclick="toggleChat()" class="chat-close">×</button>
+            </div>
         </div>
         <div class="chat-messages" id="chatMessages">
             <div class="system-message">Welcome to TG-Math Global Chat! Be respectful to others.</div>
+            <div class="system-message">Connecting to chat server...</div>
         </div>
         <div class="chat-input-container">
-            <input type="text" id="chatInput" placeholder="Type your message..." maxlength="200">
+            <input type="text" id="chatInput" placeholder="Type your message..." maxlength="200" onkeypress="if(event.key === 'Enter') sendChatMessage()">
             <button id="sendMessage" onclick="sendChatMessage()">Send</button>
         </div>
         <div class="chat-info">
-            <span id="onlineCount">Online: 1</span>
+            <span id="onlineCount">Online: 0</span>
             <button onclick="clearChat()" class="clear-chat">Clear</button>
         </div>
     </div>
 
-    <div id="popupOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center;">
-        <div class="popup" style="background: #2d2d2d; padding: 20px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">
-            <div class="popup-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 id="popupTitle" style="margin: 0; color: #fb2651;">Title</h3>
-                <button id="popupClose" onclick="closePopup()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">×</button>
+    <div id="zoneViewer">
+        <div class="zone-header">
+            <div class="zone-title">
+                <h2 id="zoneName">zone</h2>
+                <button class="info-button" onclick="showZoneInfo()" title="Zone Information">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                </button>
+                <span id="zoneId" style="display: none;"></span>
+                <a id="zoneAuthor" href="#" target="_blank">by Author</a>
             </div>
-            <div id="popupBody" style="color: white;">
+            <div class="zone-controls">
+                <button onclick="fullscreenZone()">Fullscreen</button>
+                <button onclick="aboutBlank()">Open in New Tab</button>
+                <button onclick="downloadZone()">Download</button>
+                <button onclick="closeZone()">Close</button>
+            </div>
+        </div>
+        <iframe id="zoneFrame"></iframe>
+    </div>
+
+    <div id="popupOverlay">
+        <div class="popup">
+            <div class="popup-header">
+                <h3 id="popupTitle">Title</h3>
+                <button id="popupClose" onclick="closePopup()">×</button>
+            </div>
+            <div id="popupBody">
                 Content will be here
             </div>
         </div>
     </div>
     
-    <footer style="padding: 20px; text-align: center; background: #1e1e1e; border-top: 1px solid #333; margin-top: 40px;">
-        <div class="footer-links" style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
-            <a href="#" onclick="loadDMCA(); return false;" style="color: #fb2651; text-decoration: none;">DMCA</a>
-            <a href="#" onclick="showContact(); return false;" style="color: #fb2651; text-decoration: none;">Contact</a>
-            <a href="#" onclick="loadPrivacy(); return false;" style="color: #fb2651; text-decoration: none;">Privacy Policy</a>
-            <a href="javascript:saveData()" style="color: #fb2651; text-decoration: none;">Export Data</a>
-            <a href="#" onclick="document.getElementById('importData').click(); return false;" style="color: #fb2651; text-decoration: none;">Import Data</a>
+    <footer>
+        <div class="footer-links">
+            <a href="#" onclick="loadDMCA(); return false;">DMCA</a>
+            <a href="#" onclick="showContact(); return false;">Contact</a>
+            <a href="#" onclick="loadPrivacy(); return false;">Privacy Policy</a>
+            <a href="javascript:saveData()">Export Data</a>
+            <a href="#" onclick="document.getElementById('importData').click(); return false;">Import Data</a>
             <input type="file" id="importData" style="display: none;" onchange="loadData(event)">
         </div>
     </footer>
 
     <script src="script.js"></script>
+    <script src="chat.js"></script>
     <script>
-        // Placeholder functions for missing implementations
-        function showSettings() {
-            openPopup('Settings', 'Settings panel will be implemented here.');
-        }
-        
-        function loadDMCA() {
-            openPopup('DMCA', 'DMCA information will be displayed here.');
-        }
-        
-        function showContact() {
-            openPopup('Contact', 'Contact information will be displayed here.');
-        }
-        
-        function loadPrivacy() {
-            openPopup('Privacy Policy', 'Privacy policy information will be displayed here.');
-        }
-        
-        function openPopup(title, content) {
-            document.getElementById('popupTitle').textContent = title;
-            document.getElementById('popupBody').innerHTML = content;
-            document.getElementById('popupOverlay').style.display = 'flex';
-            document.body.classList.add('no-scroll');
-        }
-        
-        function closePopup() {
-            document.getElementById('popupOverlay').style.display = 'none';
-            document.body.classList.remove('no-scroll');
-        }
-        
-        function toggleChat() {
-            const chat = document.getElementById('globalChat');
-            chat.classList.toggle('chat-open');
-            
-            if (chat.classList.contains('chat-open')) {
-                // Focus chat input when opening
-                setTimeout(() => {
-                    document.getElementById('chatInput')?.focus();
-                }, 100);
-            }
-        }
-        
-        function sendChatMessage() {
-            const input = document.getElementById('chatInput');
-            const messages = document.getElementById('chatMessages');
-            
-            if (input.value.trim()) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'chat-message';
-                messageDiv.innerHTML = `
-                    <div class="message-header">
-                        <span class="message-user" style="color: #42f5a7">You</span>
-                        <span class="message-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                    </div>
-                    <div class="message-content">${input.value}</div>
-                `;
-                
-                messages.appendChild(messageDiv);
-                input.value = '';
-                messages.scrollTop = messages.scrollHeight;
-                
-                // Simulate a response after 1 second
-                setTimeout(() => {
-                    const responseDiv = document.createElement('div');
-                    responseDiv.className = 'chat-message';
-                    responseDiv.innerHTML = `
-                        <div class="message-header">
-                            <span class="message-user" style="color: #4287f5">Other User</span>
-                            <span class="message-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                        </div>
-                        <div class="message-content">Thanks for your message!</div>
-                    `;
-                    messages.appendChild(responseDiv);
-                    messages.scrollTop = messages.scrollHeight;
-                }, 1000);
-            }
-        }
-        
-        function clearChat() {
-            if (confirm('Clear all chat messages?')) {
-                const messages = document.getElementById('chatMessages');
-                messages.innerHTML = '<div class="system-message">Welcome to TG-Math Global Chat! Be respectful to others.</div>';
-            }
-        }
-        
-        // Placeholder functions for zone management
-        function saveData() {
-            alert('Export Data feature will be implemented.');
-        }
-        
-        function loadData(event) {
-            alert('Import Data feature will be implemented.');
-        }
-        
-        function filterZones() {
-            // Will be implemented in script.js
-        }
-        
-        function sortZones() {
-            // Will be implemented in script.js
-        }
-        
-        function filterZones2() {
-            // Will be implemented in script.js
-        }
-        
-        function listZones() {
-            // Will be implemented in script.js
-        }
-        
-        // Check for privacy parameter
         const search = new URLSearchParams(window.location.search);
         const privacy = search.get('privacy');
         if (privacy) {
             loadPrivacy();
         }
         
-        // Load chat.js after the page is loaded
+        // Функции для управления скроллом
+        function disableBodyScroll() {
+            document.body.classList.add('no-scroll');
+            document.documentElement.style.overflow = 'hidden';
+        }
+        
+        function enableBodyScroll() {
+            document.body.classList.remove('no-scroll');
+            document.documentElement.style.overflow = '';
+        }
+        
+        // Override openZone function
+        const originalOpenZone = window.openZone;
+        if (originalOpenZone) {
+            window.openZone = function(zoneId, zoneName, zoneUrl, zoneAuthor, zoneAuthorUrl) {
+                disableBodyScroll();
+                document.getElementById('zoneViewer').classList.add('active');
+                return originalOpenZone.apply(this, arguments);
+            };
+        }
+        
+        // Override closeZone function
+        const originalCloseZone = window.closeZone;
+        if (originalCloseZone) {
+            window.closeZone = function() {
+                enableBodyScroll();
+                document.getElementById('zoneViewer').classList.remove('active');
+                return originalCloseZone.apply(this, arguments);
+            };
+        }
+        
+        // Override openPopup function
+        const originalOpenPopup = window.openPopup;
+        if (originalOpenPopup) {
+            window.openPopup = function(title, content) {
+                disableBodyScroll();
+                document.getElementById('popupOverlay').classList.add('active');
+                return originalOpenPopup.apply(this, arguments);
+            };
+        }
+        
+        // Override closePopup function
+        const originalClosePopup = window.closePopup;
+        if (originalClosePopup) {
+            window.closePopup = function() {
+                enableBodyScroll();
+                document.getElementById('popupOverlay').classList.remove('active');
+                return originalClosePopup.apply(this, arguments);
+            };
+        }
+        
+        // Initialize chat when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize chat with a simpler version for now
-            setTimeout(() => {
-                const onlineCount = document.getElementById('onlineCount');
-                if (onlineCount) {
-                    // Simulate random online users
-                    const randomUsers = Math.floor(Math.random() * 20) + 5;
-                    onlineCount.textContent = `Online: ~${randomUsers}`;
-                }
-            }, 2000);
+            // Initialize chat system
+            if (typeof initChat === 'function') {
+                setTimeout(initChat, 500);
+            }
         });
     </script>
     <script>
-        // Service worker registration
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js').catch(console.error);
         }
