@@ -6,8 +6,14 @@ const searchBar = document.getElementById('searchBar');
 const sortOptions = document.getElementById('sortOptions');
 const filterOptions = document.getElementById('filterOptions');
 
-// Single source for zones data
-const zonesURL = "https://raw.githubusercontent.com/tg-math/tg-math/refs/heads/main/zones.json";
+// Multiple sources for zones data (fallback system)
+const zonesURLs = [
+    "https://raw.githubusercontent.com/tg-math/tg-math/refs/heads/main/zones.json", // Primary source
+    "https://cdn.jsdelivr.net/gh/tg-math/assets@latest/zones.json",
+    "https://cdn.jsdelivr.net/gh/tg-math/assets@master/zones.json",
+    "https://cdn.jsdelivr.net/gh/tg-math/assets/zones.json"
+];
+
 const coverURL = "https://cdn.jsdelivr.net/gh/gn-math/covers@main";
 const htmlURL = "https://cdn.jsdelivr.net/gh/gn-math/html@main";
 let zones = [];
@@ -21,20 +27,24 @@ function toTitleCase(str) {
   );
 }
 
-async function listZones() {
+async function fetchFromURL(url) {
     try {
-        console.log('Starting to load zones...');
-        
-        // Fetch zones from the single source
-        const response = await fetch(zonesURL + "?t=" + Date.now());
-        
+        const response = await fetch(url + "?t=" + Date.now());
         if (!response.ok) {
-            throw new Error(`Failed to fetch zones: ${response.status} ${response.statusText}`);
+            throw new Error(`Failed to fetch: ${response.status}`);
         }
-        
         const text = await response.text();
-        console.log(`Received data, length: ${text.length}`);
-        
+        return text;
+    } catch (error) {
+        console.error(`Error fetching from ${url}:`, error.message);
+        return null;
+    }
+}
+
+async function parseZonesData(text) {
+    if (!text) return null;
+    
+    try {
         // Clean the text - remove any non-JSON content
         let cleanedText = text.trim();
         
@@ -46,48 +56,76 @@ async function listZones() {
             cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
         }
         
-        console.log(`Cleaned text length: ${cleanedText.length}`);
-        
         // Try to fix common JSON issues
         cleanedText = cleanedText.replace(/,\s*]/g, ']'); // Remove trailing commas in arrays
         cleanedText = cleanedText.replace(/,\s*}/g, '}'); // Remove trailing commas in objects
-        cleanedText = cleanedText.replace(/"\s*,\s*""/g, '""'); // Fix empty string issues
-        
-        // Log the last 200 characters to see what's causing the issue
-        console.log('Last 200 chars:', cleanedText.substring(cleanedText.length - 200));
+        cleanedText = cleanedText.replace(/\\'/g, "'"); // Fix escaped quotes
+        cleanedText = cleanedText.replace(/\\"/g, '"'); // Fix escaped double quotes
         
         // Parse JSON
+        const parsedData = JSON.parse(cleanedText);
+        
+        if (!Array.isArray(parsedData) || parsedData.length === 0) {
+            throw new Error('Parsed data is not a valid array or is empty');
+        }
+        
+        console.log(`Successfully parsed zones data with ${parsedData.length} items`);
+        return parsedData;
+    } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        
+        // Try alternative parsing method
         try {
-            zones = JSON.parse(cleanedText);
-            console.log(`Successfully parsed JSON, items: ${zones.length}`);
-        } catch (parseError) {
-            console.error('JSON parse error:', parseError);
-            
-            // Try to manually fix common issues
-            console.log('Attempting to fix JSON manually...');
-            
-            // Remove problematic last entry if it exists
-            const lastCommaIndex = cleanedText.lastIndexOf(',');
-            if (lastCommaIndex > cleanedText.lastIndexOf(']') - 50) {
-                // Likely an issue with the last entry
-                const beforeLastEntry = cleanedText.substring(0, cleanedText.lastIndexOf(','));
-                const fixedText = beforeLastEntry + ']';
-                try {
-                    zones = JSON.parse(fixedText);
-                    console.log(`Successfully parsed fixed JSON, items: ${zones.length}`);
-                } catch (secondError) {
-                    console.error('Second parse attempt failed:', secondError);
-                    throw new Error(`Failed to parse JSON even after cleanup: ${parseError.message}`);
+            // Remove any JavaScript code before/after JSON
+            const jsonMatch = text.match(/\[[\s\S]*\]/);
+            if (jsonMatch) {
+                const alternativeText = jsonMatch[0];
+                const parsed = JSON.parse(alternativeText);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    console.log(`Alternative parse successful with ${parsed.length} items`);
+                    return parsed;
                 }
-            } else {
-                throw new Error(`Failed to parse JSON: ${parseError.message}`);
+            }
+        } catch (secondError) {
+            console.error('Alternative parse also failed:', secondError);
+        }
+        
+        throw new Error(`Failed to parse zones data: ${parseError.message}`);
+    }
+}
+
+async function listZones() {
+    try {
+        console.log('Starting to load zones from multiple sources...');
+        
+        let zonesData = null;
+        let lastError = null;
+        
+        // Try each URL in order until one succeeds
+        for (let i = 0; i < zonesURLs.length; i++) {
+            const url = zonesURLs[i];
+            console.log(`Trying source ${i + 1}: ${url}`);
+            
+            try {
+                const text = await fetchFromURL(url);
+                if (text) {
+                    zonesData = await parseZonesData(text);
+                    if (zonesData) {
+                        console.log(`Successfully loaded zones from source ${i + 1}`);
+                        break;
+                    }
+                }
+            } catch (error) {
+                lastError = error;
+                console.log(`Source ${i + 1} failed:`, error.message);
             }
         }
         
-        if (!Array.isArray(zones) || zones.length === 0) {
-            throw new Error('No valid zones data found');
+        if (!zonesData) {
+            throw new Error(lastError || 'All zone sources failed');
         }
         
+        zones = zonesData;
         console.log(`Loaded ${zones.length} zones`);
         
         // Mark first zone as featured (discord invite)
@@ -167,6 +205,7 @@ async function listZones() {
         container.innerHTML = `<div style="color: red; padding: 20px; text-align: center;">
             <h3>Error loading zones</h3>
             <p>${error.message}</p>
+            <p>Tried ${zonesURLs.length} sources, all failed.</p>
             <button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
                 Refresh Page
             </button>
@@ -324,31 +363,78 @@ function filterZones() {
 }
 
 function openZone(file) {
-    if (file.url.startsWith("http")) {
-        window.open(file.url, "_blank");
-    } else {
-        const url = file.url.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
-        fetch(url+"?t="+Date.now()).then(response => response.text()).then(html => {
-            if (zoneFrame.contentDocument === null) {
-                zoneFrame = document.createElement("iframe");
-                zoneFrame.id = "zoneFrame";
-                zoneViewer.appendChild(zoneFrame);
+    // Сначала пытаемся загрузить в iframe на текущей странице
+    try {
+        let url;
+        
+        if (file.url.startsWith("http")) {
+            // Для внешних ссылок
+            if (file.url.includes("discord.gg") || file.id === -1) {
+                // Discord ссылки открываем в новой вкладке
+                window.open(file.url, "_blank");
+                return;
             }
-            zoneFrame.contentDocument.open();
-            zoneFrame.contentDocument.write(html);
-            zoneFrame.contentDocument.close();
-            document.getElementById('zoneName').textContent = file.name;
-            document.getElementById('zoneId').textContent = file.id;
-            document.getElementById('zoneAuthor').textContent = "by " + file.author;
-            if (file.authorLink) {
-                document.getElementById('zoneAuthor').href = file.authorLink;
-            }
-            zoneViewer.style.display = "block";
-            const url = new URL(window.location);
-            url.searchParams.set('id', file.id);
-            history.pushState(null, '', url.toString());
-            zoneViewer.hidden = true;
-        }).catch(error => alert("Failed to load zone: " + error));
+            url = file.url;
+        } else {
+            // Для локальных игр с шаблонами
+            url = file.url.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
+        }
+        
+        // Создаем или обновляем iframe
+        if (!zoneFrame || zoneFrame.contentDocument === null) {
+            zoneFrame = document.createElement("iframe");
+            zoneFrame.id = "zoneFrame";
+            zoneFrame.style.width = "100%";
+            zoneFrame.style.height = "calc(100% - 60px)";
+            zoneFrame.style.border = "none";
+            zoneFrame.style.background = "white";
+            zoneViewer.innerHTML = ''; // Очищаем контейнер
+            zoneViewer.appendChild(zoneFrame);
+        }
+        
+        // Устанавливаем источник iframe напрямую
+        zoneFrame.src = url + "?t=" + Date.now();
+        
+        // Обновляем информацию о зоне
+        document.getElementById('zoneName').textContent = file.name;
+        document.getElementById('zoneId').textContent = file.id;
+        document.getElementById('zoneAuthor').textContent = "by " + (file.author || "Unknown");
+        if (file.authorLink) {
+            document.getElementById('zoneAuthor').href = file.authorLink;
+        } else {
+            document.getElementById('zoneAuthor').removeAttribute('href');
+        }
+        
+        // Показываем контейнер с игрой
+        zoneViewer.style.display = "block";
+        zoneViewer.classList.add('active');
+        
+        // Обновляем URL в браузере
+        const urlParams = new URL(window.location);
+        urlParams.searchParams.set('id', file.id);
+        history.pushState(null, '', urlParams.toString());
+        
+        // Добавляем обработчик для загрузки iframe
+        zoneFrame.onload = function() {
+            console.log('Zone loaded successfully:', file.name);
+        };
+        
+        zoneFrame.onerror = function() {
+            console.error('Failed to load zone in iframe:', file.name);
+            // Запасной вариант: открываем в новой вкладке
+            window.open(url, "_blank");
+            // Скрываем контейнер
+            zoneViewer.style.display = "none";
+            zoneViewer.classList.remove('active');
+        };
+        
+    } catch (error) {
+        console.error('Error opening zone:', error);
+        // В случае ошибки открываем в новой вкладке
+        const url = file.url.startsWith("http") 
+            ? file.url 
+            : file.url.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
+        window.open(url, "_blank");
     }
 }
 
@@ -365,9 +451,11 @@ function aboutBlank() {
 }
 
 function closeZone() {
-    zoneViewer.hidden = false;
     zoneViewer.style.display = "none";
-    zoneViewer.removeChild(zoneFrame);
+    zoneViewer.classList.remove('active');
+    if (zoneFrame) {
+        zoneFrame.src = "about:blank";
+    }
     const url = new URL(window.location);
     url.searchParams.delete('id');
     history.pushState(null, '', url.toString());
@@ -872,6 +960,3 @@ XMLHttpRequest.prototype.open = function (method, url) {
 HTMLCanvasElement.prototype.toDataURL = function (...args) {
     return "";
 };
-
-
-
