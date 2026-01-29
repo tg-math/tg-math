@@ -57,6 +57,9 @@
                 <button id="refresh" class="control-button" title="Refresh all the zones" onclick="listZones()">
                     <img src="refresh-icon.png" alt="refresh">
                 </button>
+                <button id="chat-button" class="control-button" title="Global Chat" onclick="toggleChat()">
+                    <img src="chat-icon.png" alt="chat" style="width: 20px; height: 20px;">
+                </button>
                 <button id="settings" class="control-button" title="Settings!">
                     <img src="setting.png" alt="settings">
                 </button>
@@ -77,6 +80,25 @@
             <div id="container">Loading...</div>
         </details>
     </main>
+
+    <!-- Global Chat Container -->
+    <div id="globalChat" class="chat-container">
+        <div class="chat-header">
+            <h3>Global Chat</h3>
+            <button class="chat-close" onclick="toggleChat()">×</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="system-message">Welcome to TG-Math Global Chat! Be respectful to others.</div>
+        </div>
+        <div class="chat-input-container">
+            <input type="text" id="chatInput" placeholder="Type your message..." maxlength="200">
+            <button id="sendMessage" onclick="sendChatMessage()">Send</button>
+        </div>
+        <div class="chat-info">
+            <span id="onlineCount">Online: 1</span>
+            <button onclick="clearChat()" class="clear-chat">Clear</button>
+        </div>
+    </div>
 
     <div id="zoneViewer">
         <div class="zone-header">
@@ -126,6 +148,7 @@
     </footer>
 
     <script src="script.js"></script>
+    <script src="chat.js"></script>
     <script>
         const search = new URLSearchParams(window.location.search);
         const privacy = search.get('privacy');
@@ -180,6 +203,11 @@
                 return originalClosePopup.apply(this, arguments);
             };
         }
+        
+        // Инициализация чата при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initChat, 1000); // Задержка для инициализации чата
+        });
     </script>
     <script>
         navigator.serviceWorker.register(location.protocol+"//"+location.hostname+"/sw.js");
