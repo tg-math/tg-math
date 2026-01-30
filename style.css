@@ -292,6 +292,7 @@ main {
     flex-direction: column;
 }
 
+/* ОБНОВЛЁННЫЙ СТИЛЬ ДЛЯ DETAILS - 40px отступ от низа */
 details {
     background: var(--surface);
     border-radius: var(--radius-lg);
@@ -303,6 +304,7 @@ details {
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-height: calc(100vh - 40px - 160px - 2rem - 2rem); /* 40px отступ от низа + отступы */
 }
 
 details[open] {
@@ -351,7 +353,7 @@ details[open] summary::after {
 #container,
 #featuredZones {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 1.75rem;
     padding: 1.5rem;
     flex: 1;
@@ -375,7 +377,7 @@ details[open] summary::after {
     position: relative;
     box-shadow: var(--shadow-sm);
     height: 100%;
-    min-height: 320px;
+    min-height: 340px;
     flex: 1;
 }
 
@@ -388,7 +390,7 @@ details[open] summary::after {
 .zone-img-container {
     position: relative;
     width: 100%;
-    height: 180px;
+    height: 200px;
     overflow: hidden;
     background: linear-gradient(135deg, var(--border-light) 0%, var(--border) 50%, var(--border-light) 100%);
     flex-shrink: 0;
@@ -489,7 +491,7 @@ details[open] summary::after {
 }
 
 .zone-content-title {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--text);
     line-height: 1.4;
@@ -498,7 +500,7 @@ details[open] summary::after {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    min-height: 42px;
+    min-height: 44px;
 }
 
 .zone-content-author {
@@ -526,6 +528,19 @@ details[open] summary::after {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     flex-shrink: 0;
+}
+
+/* Стиль для тега "new" - будет показываться только первые 7 дней */
+.zone-tag-new {
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+    color: white;
+    animation: pulseNew 2s infinite;
+    position: relative;
+}
+
+@keyframes pulseNew {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
 }
 
 .zone-item button {
@@ -965,17 +980,47 @@ footer {
     background: var(--primary-hover);
 }
 
+@media (max-width: 1400px) {
+    .header-content {
+        padding: 1rem 1.25rem;
+        gap: 1.25rem;
+    }
+    
+    main {
+        padding: 1.75rem 1.25rem;
+    }
+    
+    #container,
+    #featuredZones {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1.5rem;
+        padding: 1.25rem;
+    }
+    
+    .zone-item {
+        min-height: 320px;
+    }
+    
+    .zone-img-container {
+        height: 180px;
+    }
+}
+
 @media (max-width: 1200px) {
     .header-content {
         padding: 1rem;
         gap: 1rem;
     }
     
+    main {
+        padding: 1.5rem 1rem;
+    }
+    
     #container,
     #featuredZones {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 1.5rem;
-        padding: 1.25rem;
+        gap: 1.25rem;
+        padding: 1rem;
     }
     
     .zone-item {
@@ -984,6 +1029,11 @@ footer {
     
     .zone-img-container {
         height: 160px;
+    }
+    
+    .zone-content-title {
+        font-size: 15px;
+        min-height: 42px;
     }
 }
 
@@ -1002,11 +1052,18 @@ footer {
     }
     
     main {
-        padding: 1.5rem 1rem;
+        padding: 1.25rem 1rem;
     }
     
     .footer-links {
         gap: 1.5rem;
+    }
+    
+    /* Увеличиваем сетку на мобильных устройствах */
+    #container,
+    #featuredZones {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 1rem;
     }
 }
 
@@ -1061,9 +1118,10 @@ footer {
         min-height: 0;
     }
     
+    /* Увеличиваем размер сетки на планшетах */
     #container,
     #featuredZones {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
         gap: 1rem;
         padding: 1rem;
         flex: 1;
@@ -1076,7 +1134,7 @@ footer {
     }
     
     .zone-img-container {
-        height: 140px;
+        height: 150px;
     }
     
     .zone-content {
@@ -1150,9 +1208,25 @@ footer {
         height: 44px;
         flex-shrink: 0;
     }
+    
+    /* Настройки для details на мобильных */
+    details {
+        margin-bottom: 1.5rem;
+        min-height: calc(100vh - 40px - 140px - 1.5rem - 1.5rem);
+    }
+    
+    details summary {
+        padding: 1rem 1.25rem;
+        font-size: 1.125rem;
+    }
+    
+    details summary::after {
+        right: 1.25rem;
+    }
 }
 
 @media (max-width: 480px) {
+    /* Увеличиваем размер сетки на маленьких экранах */
     #container,
     #featuredZones {
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -1165,7 +1239,7 @@ footer {
     }
     
     .zone-img-container {
-        height: 120px;
+        height: 130px;
     }
     
     .zone-content {
@@ -1198,8 +1272,13 @@ footer {
     }
     
     details summary {
-        padding: 1rem;
-        font-size: 1.125rem;
+        padding: 0.875rem 1rem;
+        font-size: 1rem;
+    }
+    
+    details summary::after {
+        right: 1rem;
+        font-size: 1.25rem;
     }
     
     .popup {
