@@ -5,7 +5,6 @@ const searchBar = document.getElementById('searchBar');
 const sortOptions = document.getElementById('sortOptions');
 const filterOptions = document.getElementById('filterOptions');
 
-// https://www.jsdelivr.com/tools/purge
 const zonesurls = [
     "https://cdn.jsdelivr.net/%67%68/%67%6e%2d%6d%61%74%68/%61%73%73%65%74%73@%6d%61%69%6e/%7a%6f%6e%65%73%2e%6a%73%6f%6e",
     "https://cdn.jsdelivr.net/gh/gn-math/assets@latest/zones.json",
@@ -64,7 +63,7 @@ async function listZones() {
         const response = await fetch(zonesURL + "?t=" + Date.now());
         const json = await response.json();
         zones = json;
-        zones[0].featured = true; // always gonna be the discord
+        zones[0].featured = true;
         
         await fetchPopularity();
         sortZones();
@@ -251,7 +250,6 @@ function displayZones(zones) {
         const zoneItem = document.createElement("div");
         zoneItem.className = "zone-item";
         
-        // Контейнер для изображения
         const imgContainer = document.createElement("div");
         imgContainer.className = "zone-img-container";
         
@@ -261,7 +259,6 @@ function displayZones(zones) {
         img.loading = "lazy";
         img.className = "lazy-zone-img";
         
-        // Добавляем обработчик ошибок
         img.onerror = function() {
             this.parentElement.classList.add('error');
             this.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23f1f5f9"/><text x="50" y="50" font-family="Arial" font-size="12" text-anchor="middle" fill="%2394a3b8" dy=".3em">No Image</text></svg>';
@@ -273,7 +270,6 @@ function displayZones(zones) {
         
         imgContainer.appendChild(img);
         
-        // Оверлей для изображения
         const imgOverlay = document.createElement("div");
         imgOverlay.className = "zone-img-overlay";
         imgOverlay.innerHTML = `
@@ -284,7 +280,6 @@ function displayZones(zones) {
         
         zoneItem.appendChild(imgContainer);
         
-        // Контент зоны
         const zoneContent = document.createElement("div");
         zoneContent.className = "zone-content";
         
@@ -300,7 +295,6 @@ function displayZones(zones) {
             zoneContent.appendChild(author);
         }
         
-        // Теги
         if (file.special && file.special.length > 0) {
             const tags = document.createElement("div");
             tags.className = "zone-tags";
@@ -324,7 +318,6 @@ function displayZones(zones) {
         
         zoneItem.appendChild(zoneContent);
         
-        // Кнопка
         const button = document.createElement("button");
         button.textContent = "Play";
         button.onclick = (event) => {
@@ -343,7 +336,6 @@ function displayZones(zones) {
         document.getElementById("allSummary").textContent = `All Zones (${zones.length})`;
     }
     
-    // Lazy loading изображений
     const lazyImages = document.querySelectorAll('#container img.lazy-zone-img');
     const imageObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
@@ -425,7 +417,6 @@ function openZone(file) {
             urlParams.searchParams.set('id', file.id);
             history.pushState(null, '', urlParams.toString());
             
-            // Отключить скролл основного контента
             document.body.classList.add('no-scroll');
         }).catch(error => alert("Failed to load zone: " + error));
     }
@@ -453,16 +444,13 @@ function closeZone() {
     zoneViewer.style.display = "none";
     zoneViewer.classList.remove("active");
     
-    // Удалить iframe
     if (zoneFrame && zoneFrame.parentNode) {
         zoneFrame.parentNode.removeChild(zoneFrame);
         zoneFrame = null;
     }
     
-    // Включить скролл основного контента
     document.body.classList.remove('no-scroll');
     
-    // Очистить параметры URL
     const url = new URL(window.location);
     url.searchParams.delete('id');
     history.pushState(null, '', url.toString());
@@ -646,28 +634,24 @@ async function loadData(event) {
         try {
             const data = JSON.parse(e.target.result);
             
-            // Загрузка cookies
             if (data.cookies) {
                 data.cookies.split(';').forEach(cookie => {
                     document.cookie = cookie.trim();
                 });
             }
             
-            // Загрузка localStorage
             if (data.localStorage) {
                 for (const key in data.localStorage) {
                     localStorage.setItem(key, data.localStorage[key]);
                 }
             }
             
-            // Загрузка sessionStorage
             if (data.sessionStorage) {
                 for (const key in data.sessionStorage) {
                     sessionStorage.setItem(key, data.sessionStorage[key]);
                 }
             }
             
-            // Загрузка indexedDB
             if (data.indexedDB) {
                 for (const dbName in data.indexedDB) {
                     const stores = data.indexedDB[dbName];
@@ -708,12 +692,10 @@ async function loadData(event) {
                 }
             }
             
-            // Загрузка кэша
             if (data.caches) {
                 for (const cacheName in data.caches) {
                     const cache = await caches.open(cacheName);
                     
-                    // Очистка существующего кэша
                     const keys = await cache.keys();
                     await Promise.all(keys.map(k => cache.delete(k)));
                     
@@ -742,7 +724,7 @@ async function loadData(event) {
             }
             
             alert("Data loaded successfully!");
-            location.reload(); // Перезагружаем страницу для применения изменений
+            location.reload();
             
         } catch (error) {
             alert("Error loading data: " + error.message);
@@ -761,16 +743,13 @@ function toggleStyle() {
     const currentStyle = document.getElementById('mainStyle');
     const button = document.querySelector('.settings-button[onclick="toggleStyle()"]');
     
-    // Получаем только имя файла из href
     const currentHref = currentStyle.getAttribute('href');
     
     if (currentHref === 'style.css') {
-        // Переключаем на старый стиль
         currentStyle.setAttribute('href', 'old-style.css');
         localStorage.setItem('siteStyle', 'old');
         if (button) button.textContent = "Switch to New Style";
     } else {
-        // Переключаем на новый стиль
         currentStyle.setAttribute('href', 'style.css');
         localStorage.setItem('siteStyle', 'new');
         if (button) button.textContent = "Switch to Old Style";
@@ -797,7 +776,6 @@ function loadStylePreference() {
         document.getElementById('mainStyle').setAttribute('href', 'old-style.css');
     }
     
-    // Загружаем предпочтение темной темы
     const darkModePreference = localStorage.getItem('darkMode');
     if (darkModePreference === 'true') {
         document.body.classList.add("dark-mode");
@@ -871,7 +849,6 @@ function showSettings() {
     document.getElementById('popupOverlay').style.display = "flex";
 }
 
-// Обработчик кнопки настроек
 const settings = document.getElementById('settings');
 if (settings) {
     settings.addEventListener('click', showSettings);
@@ -1082,7 +1059,6 @@ function isBlockedDomain(url) {
     }
 }
 
-// Перехват fetch запросов
 const originalFetch = window.fetch;
 window.fetch = function (url, options) {
     if (isBlockedDomain(url)) {
@@ -1092,7 +1068,6 @@ window.fetch = function (url, options) {
     return originalFetch.apply(this, arguments);
 };
 
-// Перехват XMLHttpRequest
 const originalOpen = XMLHttpRequest.prototype.open;
 XMLHttpRequest.prototype.open = function (method, url) {
     if (isBlockedDomain(url)) {
@@ -1102,13 +1077,11 @@ XMLHttpRequest.prototype.open = function (method, url) {
     return originalOpen.apply(this, arguments);
 };
 
-// Блокировка toDataURL для canvas
 HTMLCanvasElement.prototype.toDataURL = function (...args) {
     console.warn("Canvas toDataURL blocked");
     return "";
 };
 
-// Загружаем сохраненные настройки cloak при загрузке страницы
 window.addEventListener('DOMContentLoaded', () => {
     const savedTitle = localStorage.getItem('cloakedTitle');
     const savedIcon = localStorage.getItem('cloakedIcon');
@@ -1122,20 +1095,17 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
     listZones();
     loadStylePreference();
 });
 
-// Обработчик для закрытия popup по клику на overlay
 document.getElementById('popupOverlay').addEventListener('click', function(e) {
     if (e.target === this) {
         closePopup();
     }
 });
 
-// Обработчик для клавиши Escape
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         if (document.getElementById('popupOverlay').style.display === 'flex') {
@@ -1147,3 +1117,115 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
+function optimizeGridLayout() {
+    const container = document.getElementById('container');
+    const featuredContainer = document.getElementById('featuredZones');
+    const viewportWidth = window.innerWidth;
+    
+    let columns;
+    if (viewportWidth < 480) {
+        columns = 2;
+    } else if (viewportWidth < 768) {
+        columns = 3;
+    } else if (viewportWidth < 1024) {
+        columns = 4;
+    } else if (viewportWidth < 1400) {
+        columns = 5;
+    } else {
+        columns = 6;
+    }
+    
+    const gridTemplate = `repeat(auto-fill, minmax(calc(100%/${columns} - 1rem), 1fr))`;
+    
+    if (container) {
+        container.style.gridTemplateColumns = gridTemplate;
+    }
+    
+    if (featuredContainer) {
+        featuredContainer.style.gridTemplateColumns = gridTemplate;
+    }
+}
+
+function fillEmptyGridSpaces() {
+    const containers = ['container', 'featuredZones'];
+    
+    containers.forEach(containerId => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        const items = container.querySelectorAll('.zone-item');
+        if (items.length === 0) return;
+        
+        const containerStyle = window.getComputedStyle(container);
+        const gap = parseFloat(containerStyle.gap) || 1.5;
+        const columnWidth = items[0]?.offsetWidth || 200;
+        
+        const containerWidth = container.offsetWidth;
+        const itemsPerRow = Math.floor((containerWidth + gap) / (columnWidth + gap));
+        const totalItems = items.length;
+        const itemsInLastRow = totalItems % itemsPerRow;
+        
+        if (itemsInLastRow > 0 && itemsInLastRow < itemsPerRow) {
+            const placeholdersNeeded = itemsPerRow - itemsInLastRow;
+            
+            const oldPlaceholders = container.querySelectorAll('.grid-placeholder');
+            oldPlaceholders.forEach(p => p.remove());
+            
+            for (let i = 0; i < placeholdersNeeded; i++) {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'zone-item grid-placeholder';
+                placeholder.style.visibility = 'hidden';
+                placeholder.style.pointerEvents = 'none';
+                container.appendChild(placeholder);
+            }
+        }
+    });
+}
+
+window.addEventListener('load', () => {
+    optimizeGridLayout();
+    fillEmptyGridSpaces();
+    
+    listZones();
+    loadStylePreference();
+});
+
+window.addEventListener('resize', () => {
+    optimizeGridLayout();
+    setTimeout(fillEmptyGridSpaces, 100);
+});
+
+const originalDisplayZones = window.displayZones;
+window.displayZones = function(zones) {
+    const result = originalDisplayZones.apply(this, arguments);
+    setTimeout(fillEmptyGridSpaces, 100);
+    return result;
+};
+
+const originalDisplayFeaturedZones = window.displayFeaturedZones;
+window.displayFeaturedZones = function(zones) {
+    const result = originalDisplayFeaturedZones.apply(this, arguments);
+    setTimeout(fillEmptyGridSpaces, 100);
+    return result;
+};
+
+const originalFilterZones = window.filterZones;
+window.filterZones = function() {
+    const result = originalFilterZones.apply(this, arguments);
+    setTimeout(fillEmptyGridSpaces, 100);
+    return result;
+};
+
+const originalFilterZones2 = window.filterZones2;
+window.filterZones2 = function() {
+    const result = originalFilterZones2.apply(this, arguments);
+    setTimeout(fillEmptyGridSpaces, 100);
+    return result;
+};
+
+const originalSortZones = window.sortZones;
+window.sortZones = function() {
+    const result = originalSortZones.apply(this, arguments);
+    setTimeout(fillEmptyGridSpaces, 100);
+    return result;
+};
