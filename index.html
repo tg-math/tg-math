@@ -42,6 +42,12 @@
     <header>
         <div class="header-content">
             <div class="logo">tg-math</div>
+            <button class="mobile-menu-toggle" onclick="toggleMobileSearch()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </button>
             <div class="search-container">
                 <input type="text" id="searchBar" placeholder="Search zones..." oninput="filterZones()">
                 <select id="sortOptions" onchange="sortZones()">
@@ -132,7 +138,22 @@
             loadPrivacy();
         }
         
-        // Функции для управления скроллом
+        function toggleMobileSearch() {
+            const searchContainer = document.querySelector('.search-container');
+            searchContainer.classList.toggle('mobile-visible');
+        }
+        
+        document.addEventListener('click', function(e) {
+            const searchContainer = document.querySelector('.search-container');
+            const menuToggle = document.querySelector('.mobile-menu-toggle');
+            
+            if (searchContainer.classList.contains('mobile-visible') && 
+                !searchContainer.contains(e.target) && 
+                !menuToggle.contains(e.target)) {
+                searchContainer.classList.remove('mobile-visible');
+            }
+        });
+        
         function disableBodyScroll() {
             document.body.classList.add('no-scroll');
             document.documentElement.style.overflow = 'hidden';
@@ -143,7 +164,6 @@
             document.documentElement.style.overflow = '';
         }
         
-        // Переопределение функций открытия/закрытия
         const originalOpenZone = window.openZone;
         if (originalOpenZone) {
             window.openZone = function(zoneId, zoneName, zoneUrl, zoneAuthor, zoneAuthorUrl) {
