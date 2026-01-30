@@ -1,6 +1,4 @@
-/* old-style.css - Старый стиль сайта */
-
-:root {
+        :root {
     --primary: #fc2651;
     --primary-hover: #e91e47;
     --primary-light: rgba(252, 38, 81, 0.1);
@@ -501,6 +499,7 @@ footer {
     border-top: 1px solid var(--border);
     padding: 1rem 1rem;
     text-align: center;
+
     position: fixed;
     bottom: 0;
     left: 0;
@@ -578,8 +577,8 @@ footer {
     .zone-item:hover {
         transform: translateY(-10px) scale(1.01);
     }
-}
 
+}
 .control-button img {
     transition: transform 0.4s ease;
     width: 24px;
@@ -596,7 +595,6 @@ footer {
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
 }
-
 .control-button:active {
     transform: translateY(0);
 }
@@ -615,11 +613,9 @@ footer {
     justify-content: center;
     backdrop-filter: blur(20px);
 }
-
 .control-buttons button:hover {
     background: rgba(255, 255, 255, 0.2);
 }
-
 .settings-button {
     background: var(--gradient-primary);
     color: white;
