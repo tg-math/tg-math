@@ -251,15 +251,82 @@ function displayZones(zones) {
         const zoneItem = document.createElement("div");
         zoneItem.className = "zone-item";
         
+        // Контейнер для изображения
+        const imgContainer = document.createElement("div");
+        imgContainer.className = "zone-img-container";
+        
         const img = document.createElement("img");
         img.dataset.src = file.cover.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
         img.alt = file.name;
         img.loading = "lazy";
         img.className = "lazy-zone-img";
-        zoneItem.appendChild(img);
         
+        // Добавляем обработчик ошибок
+        img.onerror = function() {
+            this.parentElement.classList.add('error');
+            this.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23f1f5f9"/><text x="50" y="50" font-family="Arial" font-size="12" text-anchor="middle" fill="%2394a3b8" dy=".3em">No Image</text></svg>';
+        };
+        
+        img.onload = function() {
+            this.classList.add('loaded');
+        };
+        
+        imgContainer.appendChild(img);
+        
+        // Оверлей для изображения
+        const imgOverlay = document.createElement("div");
+        imgOverlay.className = "zone-img-overlay";
+        imgOverlay.innerHTML = `
+            <h3 class="zone-title-overlay">${file.name}</h3>
+            ${file.author ? `<p class="zone-author-overlay">by ${file.author}</p>` : ''}
+        `;
+        imgContainer.appendChild(imgOverlay);
+        
+        zoneItem.appendChild(imgContainer);
+        
+        // Контент зоны
+        const zoneContent = document.createElement("div");
+        zoneContent.className = "zone-content";
+        
+        const title = document.createElement("h3");
+        title.className = "zone-content-title";
+        title.textContent = file.name;
+        zoneContent.appendChild(title);
+        
+        if (file.author) {
+            const author = document.createElement("p");
+            author.className = "zone-content-author";
+            author.textContent = `by ${file.author}`;
+            zoneContent.appendChild(author);
+        }
+        
+        // Теги
+        if (file.special && file.special.length > 0) {
+            const tags = document.createElement("div");
+            tags.className = "zone-tags";
+            
+            file.special.slice(0, 2).forEach(tag => {
+                const tagElement = document.createElement("span");
+                tagElement.className = "zone-tag";
+                tagElement.textContent = tag;
+                tags.appendChild(tagElement);
+            });
+            
+            if (file.special.length > 2) {
+                const moreTag = document.createElement("span");
+                moreTag.className = "zone-tag";
+                moreTag.textContent = `+${file.special.length - 2}`;
+                tags.appendChild(moreTag);
+            }
+            
+            zoneContent.appendChild(tags);
+        }
+        
+        zoneItem.appendChild(zoneContent);
+        
+        // Кнопка
         const button = document.createElement("button");
-        button.textContent = file.name;
+        button.textContent = "Play";
         button.onclick = (event) => {
             event.stopPropagation();
             openZone(file);
@@ -271,18 +338,21 @@ function displayZones(zones) {
     });
     
     if (container.innerHTML === "") {
-        container.innerHTML = "No zones found.";
+        container.innerHTML = "<p style='text-align: center; color: var(--text-muted); grid-column: 1 / -1;'>No zones found.</p>";
     } else {
         document.getElementById("allSummary").textContent = `All Zones (${zones.length})`;
     }
-
+    
+    // Lazy loading изображений
     const lazyImages = document.querySelectorAll('#container img.lazy-zone-img');
     const imageObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const img = entry.target;
-                img.src = img.dataset.src;
-                img.classList.remove("lazy-zone-img");
+                if (img.dataset.src) {
+                    img.src = img.dataset.src;
+                    delete img.dataset.src;
+                }
                 observer.unobserve(img);
             }
         });
@@ -290,10 +360,8 @@ function displayZones(zones) {
         rootMargin: "100px",
         threshold: 0.1
     });
-
-    lazyImages.forEach(img => {
-        imageObserver.observe(img);
-    });
+    
+    lazyImages.forEach(img => imageObserver.observe(img));
 }
 
 function filterZones2() {
@@ -690,713 +758,36 @@ function darkMode() {
 }
 
 function toggleStyle() {
-    const currentStyle = document.getElementById('mainStyle').getAttribute('href');
+    const currentStyle = document.getElementById('mainStyle');
+    const button = document.querySelector('.settings-button[onclick="toggleStyle()"]');
     
-    if (currentStyle.includes('style.css')) {
-        // Создаем простой старый стиль, если файла нет
-        if (!document.querySelector('#oldStyle')) {
-            // Создаем стиль для старого дизайна
-            const oldStyle = document.createElement('style');
-            oldStyle.id = 'oldStyle';
-            oldStyle.textContent = `
-                /* Old Style CSS */
-                        :root {
-    --primary: #fc2651;
-    --primary-hover: #e91e47;
-    --primary-light: rgba(252, 38, 81, 0.1);
-    --primary-lighter: rgba(252, 38, 81, 0.05);
-    --accent: #8b5cf6;
-    --accent-light: rgba(139, 92, 246, 0.1);
-    --success: #10b981;
-    --warning: #f59e0b;
-    --text: #1a1a1a;
-    --text-muted: #6b7280;
-    --text-light: #9ca3af;
-    --bg: #ffffff;
-    --bg-secondary: #f8fafc;
-    --surface: #ffffff;
-    --surface-hover: #f1f5f9;
-    --border: #e2e8f0;
-    --border-light: #f1f5f9;
-    --glass: rgba(255, 255, 255, 0.8);
-    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    --shadow-glow: 0 0 20px rgba(252, 38, 81, 0.3);
-    --radius: 12px;
-    --radius-sm: 8px;
-    --radius-lg: 16px;
-    --radius-xl: 20px;
-    --gradient-primary: linear-gradient(135deg, #fc2651 0%, #e91e47 100%);
-    --gradient-accent: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-    --gradient-surface: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-}
-
-.dark-mode {
-    --primary: #fc2651;
-    --primary-hover: #ff4d75;
-    --primary-light: rgba(252, 38, 81, 0.15);
-    --primary-lighter: rgba(252, 38, 81, 0.08);
-    --accent: #a855f7;
-    --accent-light: rgba(168, 85, 247, 0.15);
-    --success: #34d399;
-    --warning: #fbbf24;
-    --text: #f1f5f9;
-    --text-muted: #94a3b8;
-    --text-light: #64748b;
-    --bg: #0f172a;
-    --bg-secondary: #1e293b;
-    --surface: #1e293b;
-    --surface-hover: #334155;
-    --border: #334155;
-    --border-light: #475569;
-    --glass: rgba(30, 41, 59, 0.8);
-    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.4);
-    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.6);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.7), 0 8px 10px -6px rgb(0 0 0 / 0.7);
-    --shadow-glow: 0 0 20px rgba(252, 38, 81, 0.4);
-    --gradient-primary: linear-gradient(135deg, #fc2651 0%, #ff4d75 100%);
-    --gradient-accent: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
-    --gradient-surface: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-}
-
-* {
-    box-sizing: border-box;
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
-    line-height: 1.6;
-    margin: 0;
-    padding: 0;
-    background: var(--bg);
-    color: var(--text);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    font-weight: 400;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-header {
-    background: var(--gradient-primary);
-    color: white;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: var(--shadow-lg);
-    backdrop-filter: blur(20px);
-}
-
-.header-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1.25rem 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
-}
-
-.logo {
-    font-size: 1.75rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.search-container {
-    display: flex;
-    flex: 1;
-    max-width: 500px;
-    gap: 0.75rem;
-}
-
-#searchBar {
-    flex: 1;
-    padding: 0.875rem 1rem;
-    border: 0;
-    border-radius: var(--radius);
-    background: var(--glass);
-    backdrop-filter: blur(20px);
-    color: var(--text);
-    font-size: 15px;
-    outline: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: var(--shadow-sm);
-}
-
-#searchBar:focus {
-    background: var(--text);
-    box-shadow: 0 0 0 3px rgba(252, 38, 81, 0.25), var(--shadow);
-    transform: translateY(-1px);
-    color: var(--glass);
-}
-
-#searchBar::placeholder {
-    color: var(--text-muted);
-}
-
-#sortOptions {
-    padding: 0.875rem 1rem;
-    border: 0;
-    border-radius: var(--radius);
-    background: var(--glass);
-    backdrop-filter: blur(20px);
-    color: var(--text-muted);
-    font-size: 15px;
-    cursor: pointer;
-    outline: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    min-width: 130px;
-    box-shadow: var(--shadow-sm);
-}
-
-#sortOptions:hover {
-    background: var(--text);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow);
-    color: var(--glass);
-}
-
-#filterOptions {
-    padding: 0.875rem 1rem;
-    border: 0;
-    border-radius: var(--radius);
-    background: var(--glass);
-    backdrop-filter: blur(20px);
-    color: var(--text-muted);
-    font-size: 15px;
-    cursor: pointer;
-    outline: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    min-width: 130px;
-    box-shadow: var(--shadow-sm);
-}
-
-#filterOptions:hover {
-    background: var(--text);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow);
-    color: var(--glass);
-}
-
-.control-buttons {
-    display: flex;
-    gap: 0.5rem;
-}
-
-main {
-    margin: 0 auto;
-    padding: 2rem 1rem;
-    padding-bottom: 6rem;
-}
-
-#zoneCount {
-    margin: 0 0 1.5rem;
-    font-size: 14px;
-    color: var(--text-muted);
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-#zoneCount::before {
-    content: '';
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: var(--primary);
-}
-
-#container,
-#featuredZones {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1.5rem;
-}
-
-.zone-item {
-    background: var(--gradient-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    box-shadow: var(--shadow-sm);
-}
-
-.zone-item:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: var(--shadow-xl);
-    border-color: var(--primary);
-}
-
-.zone-item:hover::before {
-    opacity: 1;
-}
-
-.zone-item::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--primary-light);
-    opacity: 0;
-    transition: opacity 0.4s ease;
-    pointer-events: none;
-    z-index: 1;
-}
-
-.zone-item img {
-    width: 100%;
-    aspect-ratio: 1;
-    object-fit: cover;
-    display: block;
-    background: var(--border-light);
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.zone-item:hover img {
-    transform: scale(1.05);
-}
-
-.zone-item button {
-    background: transparent;
-    color: var(--text);
-    border: 0;
-    padding: 1.25rem 1rem;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 1.4;
-    text-align: center;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    min-height: 70px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    z-index: 2;
-}
-
-.zone-item:hover button {
-    color: var(--primary);
-    background: rgba(252, 38, 81, 0.05);
-}
-
-#zoneViewer {
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    z-index: 1000;
-    display: none;
-    flex-direction: column;
-    animation: slideInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes slideInUp {
-    from {
-        transform: translateY(100%);
-    }
-    to {
-        transform: translateY(0);
-    }
-}
-
-.zone-header {
-    background: var(--gradient-primary);
-    color: white;
-    padding: 1rem 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: var(--shadow-lg);
-}
-
-.zone-title {
-    flex: 1;
-    min-width: 0;
-}
-
-#zoneName {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin: 0 0 0.25rem;
-    line-height: 1.3;
-}
-
-#zoneId {
-    display: none;
-}
-
-#zoneAuthor {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.8);
-    text-decoration: none;
-    transition: all 0.2s ease;
-    font-weight: 500;
-}
-
-#zoneAuthor:hover {
-    color: white;
-    text-decoration: underline;
-}
-
-.zone-controls {
-    display: flex;
-    gap: 0.75rem;
-}
-
-.zone-controls button {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: white;
-    padding: 0.625rem 1rem;
-    border-radius: var(--radius);
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(20px);
-}
-
-.zone-controls button:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow);
-}
-
-#zoneFrame {
-    flex-grow: 1;
-    border: none;
-    width: 90%;
-    height: 90%;
-}
-
-#popupOverlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    padding: 1rem;
-    animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-.popup {
-    background: var(--surface);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-xl);
-    width: 100%;
-    max-width: 520px;
-    max-height: 80vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--border);
-    animation: slideInScale 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes slideInScale {
-    from {
-        transform: scale(0.9) translateY(20px);
-        opacity: 0;
-    }
-    to {
-        transform: scale(1) translateY(0);
-        opacity: 1;
-    }
-}
-
-.popup-header {
-    background: var(--gradient-primary);
-    color: white;
-    padding: 1.25rem 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-#popupTitle {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 700;
-}
-
-#popupClose {
-    background: rgba(255, 255, 255, 0.1);
-    border: 0;
-    color: white;
-    font-size: 1.25rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: var(--radius);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    line-height: 1;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(20px);
-}
-
-#popupClose:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.1);
-}
-
-#popupBody {
-    padding: 1.5rem;
-    overflow-y: auto;
-    color: var(--text);
-}
-
-#popupBody input[type="text"],
-#popupBody input[type="file"] {
-    width: 100%;
-    padding: 0.875rem 1rem;
-    margin-bottom: 1.25rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--bg-secondary);
-    color: var(--text);
-    font-size: 15px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    outline: none;
-}
-
-#popupBody input[type="text"]:focus,
-#popupBody input[type="file"]:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(252, 38, 81, 0.1);
-    transform: translateY(-1px);
-}
-
-footer {
-    background: var(--bg-secondary);
-    border-top: 1px solid var(--border);
-    padding: 1rem 1rem;
-    text-align: center;
-
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    z-index: 100;
-}
-
-.footer-links {
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    flex-wrap: wrap;
-}
-
-.footer-links a {
-    color: var(--primary);
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 15px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius);
-}
-
-.footer-links a:hover {
-    color: var(--primary-hover);
-    background: var(--primary-light);
-    transform: translateY(-1px);
-}
-
-@media (max-width: 768px) {
-    .header-content {
-        flex-direction: column;
-        gap: 1rem;
-        padding: 1rem;
-    }
-
-    .search-container {
-        width: 100%;
-        max-width: none;
-    }
-
-    main {
-        padding: 1.5rem 1rem;
-    }
-
-    #container,
-    #featuredZones {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 1.25rem;
-    }
-
-    .zone-item button {
-        padding: 1rem 0.75rem;
-        min-height: 65px;
-        font-size: 13px;
-    }
-
-    .footer-links {
-        gap: 1.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    #container,
-    #featuredZones {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 1rem;
-    }
-
-    .popup {
-        margin: 0.5rem;
-    }
-
-    .zone-item:hover {
-        transform: translateY(-10px) scale(1.01);
-    }
-
-}
-.control-button img {
-    transition: transform 0.4s ease;
-    width: 24px;
-    height: 24px;
-}
-
-.control-button:hover img {
-    transform: rotate(40deg);
-}
-
-.control-button,
-.control-button:hover {
-    box-shadow: none;
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-}
-.control-button:active {
-    transform: translateY(0);
-}
-
-.control-buttons button {
-    background: rgba(255, 255, 255, 0.1);
-    border: 0;
-    color: white;
-    cursor: pointer;
-    padding: 0;
-    width: 44px;
-    height: 44px;
-    border-radius: var(--radius);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(20px);
-}
-.control-buttons button:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-.settings-button {
-    background: var(--gradient-primary);
-    color: white;
-    border: 0;
-    padding: 0.875rem 1.5rem;
-    font-size: 15px;
-    font-weight: 600;
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: var(--shadow-sm);
-    min-width: 200px;
-    width: 100%;
-    text-align: center;
-}
-
-.settings-button:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-}
-
-.settings-button:active {
-    transform: translateY(0);
-    box-shadow: var(--shadow-sm);
-}
-
-.info-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    margin-left: 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    transition: background-color 0.2s, transform 0.2s;
-    color: inherit;
-    vertical-align: middle;
-}
-
-.info-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    transform: scale(1.1);
-}
-
-.info-button:active {
-    transform: scale(0.95);
-}
-
-.info-button svg {
-    display: block;
-}
-            `;
-            document.head.appendChild(oldStyle);
-        }
-        
-        // Отключаем основной стиль и включаем старый
-        document.getElementById('mainStyle').disabled = true;
-        document.querySelector('#oldStyle').disabled = false;
+    // Получаем только имя файла из href
+    const currentHref = currentStyle.getAttribute('href');
+    
+    if (currentHref === 'style.css') {
+        // Переключаем на старый стиль
+        currentStyle.setAttribute('href', 'old-style.css');
         localStorage.setItem('siteStyle', 'old');
-        
+        if (button) button.textContent = "Switch to New Style";
     } else {
-        // Включаем основной стиль и отключаем старый
-        document.getElementById('mainStyle').disabled = false;
-        if (document.querySelector('#oldStyle')) {
-            document.querySelector('#oldStyle').disabled = true;
-        }
+        // Переключаем на новый стиль
+        currentStyle.setAttribute('href', 'style.css');
         localStorage.setItem('siteStyle', 'new');
+        if (button) button.textContent = "Switch to Old Style";
     }
 }
 
 function loadStylePreference() {
     const savedStyle = localStorage.getItem('siteStyle');
+    const button = document.querySelector('.settings-button[onclick="toggleStyle()"]');
+    const styleElement = document.getElementById('mainStyle');
+    
     if (savedStyle === 'old') {
-        // Если выбрано старый стиль, создаем его и отключаем основной
-        toggleStyle(); // Это применит старый стиль
+        styleElement.setAttribute('href', 'old-style.css');
+        if (button) button.textContent = "Switch to New Style";
+    } else {
+        styleElement.setAttribute('href', 'style.css');
+        if (button) button.textContent = "Switch to Old Style";
     }
 }
 

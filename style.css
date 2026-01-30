@@ -347,7 +347,7 @@ details[open] summary::after {
     display: contents;
 }
 
-/* Zone Items */
+/* Zone Items - УЛУЧШЕННАЯ ВЕРСИЯ */
 .zone-item {
     background: var(--gradient-surface);
     border: 1px solid var(--border);
@@ -360,7 +360,7 @@ details[open] summary::after {
     position: relative;
     box-shadow: var(--shadow-sm);
     height: 100%;
-    min-height: 280px;
+    min-height: 320px;
 }
 
 .zone-item:hover {
@@ -369,19 +369,146 @@ details[open] summary::after {
     border-color: var(--primary);
 }
 
+/* Контейнер для изображения */
+.zone-img-container {
+    position: relative;
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--border-light) 0%, var(--border) 50%, var(--border-light) 100%);
+}
+
 .zone-item img {
     width: 100%;
-    aspect-ratio: 16/9;
+    height: 100%;
     object-fit: cover;
     display: block;
-    background: linear-gradient(135deg, var(--border-light), var(--border));
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     z-index: 2;
+    background: linear-gradient(135deg, 
+        var(--border-light) 0%, 
+        var(--accent-light) 25%, 
+        var(--primary-light) 50%, 
+        var(--accent-light) 75%, 
+        var(--border-light) 100%);
+    background-size: 400% 400%;
+    animation: gradientBG 3s ease infinite;
+}
+
+/* Анимация градиентного фона при загрузке */
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .zone-item:hover img {
-    transform: scale(1.05);
+    transform: scale(1.1);
+}
+
+/* Затенение для лучшей читаемости текста на изображении */
+.zone-img-container::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40%;
+    background: linear-gradient(to top, 
+        rgba(0, 0, 0, 0.7) 0%, 
+        rgba(0, 0, 0, 0.5) 30%, 
+        transparent 100%);
+    z-index: 3;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.zone-item:hover .zone-img-container::after {
+    opacity: 1;
+}
+
+/* Текст поверх изображения */
+.zone-img-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem;
+    z-index: 4;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+}
+
+.zone-item:hover .zone-img-overlay {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.zone-title-overlay {
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.zone-author-overlay {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 11px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    margin-top: 0.25rem;
+}
+
+/* Контент зоны под изображением */
+.zone-content {
+    padding: 1.25rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.zone-content-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.4;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.zone-content-author {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.zone-tags {
+    display: flex;
+    gap: 0.375rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.zone-tag {
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .zone-item button {
@@ -398,10 +525,56 @@ details[open] summary::after {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-family: inherit;
+    position: relative;
+    overflow: hidden;
+}
+
+.zone-item button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.zone-item button:hover::before {
+    left: 100%;
 }
 
 .zone-item button:hover {
     background: var(--primary-hover);
+    letter-spacing: 1px;
+}
+
+/* Индикатор загрузки изображения */
+.lazy-zone-img {
+    opacity: 0;
+    filter: blur(10px);
+    transition: opacity 0.5s ease, filter 0.5s ease;
+}
+
+.lazy-zone-img.loaded {
+    opacity: 1;
+    filter: blur(0);
+}
+
+/* Состояние ошибки загрузки изображения */
+.zone-img-container.error::before {
+    content: '⚠️';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    z-index: 1;
+    opacity: 0.5;
+}
+
+.zone-img-container.error img {
+    opacity: 0.3;
 }
 
 /* Zone Viewer */
@@ -788,6 +961,14 @@ footer {
         gap: 1.5rem;
         padding: 1.25rem;
     }
+    
+    .zone-item {
+        min-height: 300px;
+    }
+    
+    .zone-img-container {
+        height: 160px;
+    }
 }
 
 @media (max-width: 900px) {
@@ -839,6 +1020,38 @@ footer {
         padding: 1rem;
     }
     
+    .zone-item {
+        min-height: 280px;
+    }
+    
+    .zone-img-container {
+        height: 140px;
+    }
+    
+    .zone-content {
+        padding: 1rem;
+    }
+    
+    .zone-content-title {
+        font-size: 14px;
+    }
+    
+    .zone-content-author {
+        font-size: 12px;
+    }
+    
+    .zone-img-overlay {
+        padding: 0.75rem;
+    }
+    
+    .zone-title-overlay {
+        font-size: 13px;
+    }
+    
+    .zone-author-overlay {
+        font-size: 10px;
+    }
+    
     .zone-header {
         flex-direction: column;
         gap: 1rem;
@@ -876,6 +1089,14 @@ footer {
         gap: 1rem;
     }
     
+    .zone-item {
+        min-height: 260px;
+    }
+    
+    .zone-img-container {
+        height: 120px;
+    }
+    
     .control-button {
         width: 44px;
         height: 44px;
@@ -893,10 +1114,6 @@ footer {
     
     .zone-item:hover {
         transform: translateY(-4px);
-    }
-    
-    .zone-item {
-        min-height: 250px;
     }
 }
 
@@ -925,16 +1142,6 @@ footer {
 
 .hover-lift:hover {
     transform: translateY(-4px);
-}
-
-/* Animation for lazy loaded images */
-.lazy-zone-img {
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.lazy-zone-img.loaded {
-    opacity: 1;
 }
 
 /* Smooth Appear Animation */
@@ -987,5 +1194,93 @@ hr {
         padding: 1rem;
         z-index: 1001;
         box-shadow: var(--shadow-lg);
+    }
+}
+
+/* Empty state styling */
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+}
+
+.empty-state h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+}
+
+.empty-state p {
+    font-size: 0.95rem;
+    opacity: 0.8;
+}
+
+/* Tag colors for different categories */
+.tag-math {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+}
+
+.tag-game {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.tag-educational {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+}
+
+.tag-fun {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+}
+
+.tag-popular {
+    background: linear-gradient(135deg, #ec4899, #db2777);
+    color: white;
+}
+
+.tag-new {
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+    color: white;
+}
+
+/* Focus styles for accessibility */
+*:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+    outline: none;
+}
+
+*:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+    header, footer, .zone-controls, .control-buttons, #popupOverlay {
+        display: none !important;
+    }
+    
+    main {
+        padding: 0;
+        margin: 0;
+    }
+    
+    #container, #featuredZones {
+        display: block;
+    }
+    
+    .zone-item {
+        break-inside: avoid;
+        margin-bottom: 1rem;
+        border: 1px solid #ccc;
+        box-shadow: none;
     }
 }
