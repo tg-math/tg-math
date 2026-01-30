@@ -281,9 +281,10 @@ header {
     filter: brightness(0) invert(1);
 }
 
+/* ОСНОВНОЕ ИЗМЕНЕНИЕ: main растягивается на всю ширину */
 main {
-    max-width: 1400px;
-    margin: 0 auto;
+    max-width: none; /* Убираем ограничение по ширине */
+    margin: 0;
     padding: 2rem 1.5rem;
     flex: 1;
     width: 100%;
@@ -292,7 +293,7 @@ main {
     flex-direction: column;
 }
 
-/* ОБНОВЛЁННЫЙ СТИЛЬ ДЛЯ DETAILS - 40px отступ от низа */
+/* ОБНОВЛЁННЫЙ СТИЛЬ ДЛЯ DETAILS - расширяются влево и вправо */
 details {
     background: var(--surface);
     border-radius: var(--radius-lg);
@@ -304,7 +305,23 @@ details {
     flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - 40px - 160px - 2rem - 2rem); /* 40px отступ от низа + отступы */
+    min-height: calc(100vh - 40px - 160px - 2rem - 2rem);
+    width: 100%; /* Занимает всю ширину родителя */
+    margin-left: -1.5rem; /* Компенсируем padding родителя */
+    margin-right: -1.5rem; /* Компенсируем padding родителя */
+    border-radius: 0; /* Убираем скругление углов для растянутого вида */
+    border-left: none;
+    border-right: none;
+}
+
+/* Для больших экранов добавляем отступы */
+@media (min-width: 1400px) {
+    details {
+        margin-left: calc((100vw - 1400px) / -2);
+        margin-right: calc((100vw - 1400px) / -2);
+        padding-left: calc((100vw - 1400px) / 2);
+        padding-right: calc((100vw - 1400px) / 2);
+    }
 }
 
 details[open] {
@@ -327,6 +344,12 @@ details summary {
     transition: var(--transition);
     user-select: none;
     flex-shrink: 0;
+    /* Расширяем summary тоже */
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    padding-left: 3rem;
+    padding-right: 3rem;
+    width: calc(100% + 3rem);
 }
 
 details summary:hover {
@@ -359,6 +382,12 @@ details[open] summary::after {
     flex: 1;
     align-content: start;
     min-height: 200px;
+    /* Расширяем контейнеры с играми */
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    padding-left: 3rem;
+    padding-right: 3rem;
+    width: calc(100% + 3rem);
 }
 
 .zone-container {
@@ -980,6 +1009,7 @@ footer {
     background: var(--primary-hover);
 }
 
+/* УБИРАЕМ ОГРАНИЧЕНИЕ ДЛЯ details НА ВСЕХ ЭКРАНАХ */
 @media (max-width: 1400px) {
     .header-content {
         padding: 1rem 1.25rem;
@@ -995,6 +1025,11 @@ footer {
         grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
         gap: 1.5rem;
         padding: 1.25rem;
+        margin-left: -1.25rem;
+        margin-right: -1.25rem;
+        padding-left: 2.5rem;
+        padding-right: 2.5rem;
+        width: calc(100% + 2.5rem);
     }
     
     .zone-item {
@@ -1003,6 +1038,19 @@ footer {
     
     .zone-img-container {
         height: 180px;
+    }
+    
+    details {
+        margin-left: -1.25rem;
+        margin-right: -1.25rem;
+    }
+    
+    details summary {
+        margin-left: -1.25rem;
+        margin-right: -1.25rem;
+        padding-left: 2.5rem;
+        padding-right: 2.5rem;
+        width: calc(100% + 2.5rem);
     }
 }
 
@@ -1021,6 +1069,11 @@ footer {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 1.25rem;
         padding: 1rem;
+        margin-left: -1rem;
+        margin-right: -1rem;
+        padding-left: 2rem;
+        padding-right: 2rem;
+        width: calc(100% + 2rem);
     }
     
     .zone-item {
@@ -1034,6 +1087,19 @@ footer {
     .zone-content-title {
         font-size: 15px;
         min-height: 42px;
+    }
+    
+    details {
+        margin-left: -1rem;
+        margin-right: -1rem;
+    }
+    
+    details summary {
+        margin-left: -1rem;
+        margin-right: -1rem;
+        padding-left: 2rem;
+        padding-right: 2rem;
+        width: calc(100% + 2rem);
     }
 }
 
@@ -1064,6 +1130,25 @@ footer {
     #featuredZones {
         grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
         gap: 1rem;
+        padding: 1rem;
+        margin-left: -1rem;
+        margin-right: -1rem;
+        padding-left: 2rem;
+        padding-right: 2rem;
+        width: calc(100% + 2rem);
+    }
+    
+    details {
+        margin-left: -1rem;
+        margin-right: -1rem;
+    }
+    
+    details summary {
+        margin-left: -1rem;
+        margin-right: -1rem;
+        padding-left: 2rem;
+        padding-right: 2rem;
+        width: calc(100% + 2rem);
     }
 }
 
@@ -1124,6 +1209,11 @@ footer {
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
         gap: 1rem;
         padding: 1rem;
+        margin-left: -0.75rem;
+        margin-right: -0.75rem;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+        width: calc(100% + 1.5rem);
         flex: 1;
         align-content: start;
     }
@@ -1213,11 +1303,18 @@ footer {
     details {
         margin-bottom: 1.5rem;
         min-height: calc(100vh - 40px - 140px - 1.5rem - 1.5rem);
+        margin-left: -0.75rem;
+        margin-right: -0.75rem;
     }
     
     details summary {
         padding: 1rem 1.25rem;
         font-size: 1.125rem;
+        margin-left: -0.75rem;
+        margin-right: -0.75rem;
+        padding-left: 2rem;
+        padding-right: 2rem;
+        width: calc(100% + 1.5rem);
     }
     
     details summary::after {
@@ -1232,6 +1329,11 @@ footer {
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
         gap: 0.75rem;
         padding: 0.75rem;
+        margin-left: -0.75rem;
+        margin-right: -0.75rem;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+        width: calc(100% + 1.5rem);
     }
     
     .zone-item {
@@ -1271,9 +1373,19 @@ footer {
         height: 20px;
     }
     
+    details {
+        margin-left: -0.75rem;
+        margin-right: -0.75rem;
+    }
+    
     details summary {
         padding: 0.875rem 1rem;
         font-size: 1rem;
+        margin-left: -0.75rem;
+        margin-right: -0.75rem;
+        padding-left: 1.75rem;
+        padding-right: 1.75rem;
+        width: calc(100% + 1.5rem);
     }
     
     details summary::after {
