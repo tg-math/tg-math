@@ -572,6 +572,24 @@ function darkMode() {
     document.body.classList.toggle("dark-mode");
 }
 
+function toggleStyle() {
+    const currentStyle = document.getElementById('mainStyle').getAttribute('href');
+    if (currentStyle.includes('style.css')) {
+        document.getElementById('mainStyle').setAttribute('href', 'old-style.css');
+        localStorage.setItem('siteStyle', 'old');
+    } else {
+        document.getElementById('mainStyle').setAttribute('href', 'style.css');
+        localStorage.setItem('siteStyle', 'new');
+    }
+}
+
+function loadStylePreference() {
+    const savedStyle = localStorage.getItem('siteStyle');
+    if (savedStyle === 'old') {
+        document.getElementById('mainStyle').setAttribute('href', 'old-style.css');
+    }
+}
+
 function cloakIcon(url) {
     const link = document.querySelector("link[rel~='icon']");
     link.rel = "icon";
@@ -606,19 +624,23 @@ function tabCloak() {
     document.getElementById('popupOverlay').style.display = "flex";
 }
 
-const settings = document.getElementById('settings');
-settings.addEventListener('click', () => {
+function showSettings() {
     document.getElementById('popupTitle').textContent = "Settings";
     const popupBody = document.getElementById('popupBody');
     popupBody.innerHTML = `
     <button class="settings-button" onclick="darkMode()">Toggle Dark Mode</button>
+    <br><br>
+    <button class="settings-button" onclick="toggleStyle()">Switch to Old/New Style</button>
     <br><br>
     <button class="settings-button" onclick="tabCloak()">Tab Cloak</button>
     <br>
     `;
     popupBody.contentEditable = false;
     document.getElementById('popupOverlay').style.display = "flex";
-});
+}
+
+const settings = document.getElementById('settings');
+settings.addEventListener('click', showSettings);
 
 function showContact() {
     document.getElementById('popupTitle').textContent = "Contact";
@@ -803,7 +825,6 @@ function showZoneInfo() {
 function closePopup() {
     document.getElementById('popupOverlay').style.display = "none";
 }
-listZones();
 
 const schoolList = ["deledao", "goguardian", "lightspeed", "linewize", "securly", ".edu/"];
 
@@ -833,3 +854,7 @@ XMLHttpRequest.prototype.open = function (method, url) {
 HTMLCanvasElement.prototype.toDataURL = function (...args) {
     return "";
 };
+
+// Инициализация при загрузке страницы
+listZones();
+loadStylePreference();
