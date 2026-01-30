@@ -80,7 +80,6 @@ body {
     min-height: 100vh;
 }
 
-/* Scroll management */
 .no-scroll {
     overflow: hidden !important;
     position: fixed;
@@ -88,7 +87,6 @@ body {
     height: 100%;
 }
 
-/* Loading animations */
 @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
@@ -372,9 +370,6 @@ main {
     background: rgba(252, 38, 81, 0.05);
 }
 
-/* Убраны новые стили для old-style.css: */
-/* .zone-img-container, .zone-img-overlay, .zone-content, .zone-tags, etc. */
-
 #zoneViewer {
     position: fixed;
     inset: 0;
@@ -576,7 +571,7 @@ main {
     border-radius: var(--radius);
     background: var(--bg-secondary);
     color: var(--text);
-    font-size: 16px; /* Prevent zoom on mobile */
+    font-size: 16px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     outline: none;
 }
@@ -678,6 +673,11 @@ footer {
     transform: translateY(-1px);
 }
 
+.grid-placeholder {
+    visibility: hidden;
+    pointer-events: none;
+}
+
 @media (max-width: 768px) {
     .header-content {
         flex-direction: column;
@@ -719,7 +719,6 @@ footer {
         gap: 1.5rem;
     }
     
-    /* Better touch targets on mobile */
     .control-buttons button,
     .zone-controls button,
     .footer-links a {
@@ -727,7 +726,6 @@ footer {
         min-width: 44px;
     }
     
-    /* Prevent zoom on input focus */
     input, select, textarea {
         font-size: 16px !important;
     }
