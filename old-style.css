@@ -372,6 +372,9 @@ main {
     background: rgba(252, 38, 81, 0.05);
 }
 
+/* Убраны новые стили для old-style.css: */
+/* .zone-img-container, .zone-img-overlay, .zone-content, .zone-tags, etc. */
+
 #zoneViewer {
     position: fixed;
     inset: 0;
