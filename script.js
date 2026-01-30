@@ -19,6 +19,30 @@ let zones = [];
 let popularityData = {};
 const featuredContainer = document.getElementById('featuredZones');
 
+// Функция для проверки, является ли игра новой (добавлена менее 7 дней назад)
+function isNewZone(zoneId) {
+    // Предполагаем, что ID - это timestamp в миллисекундах
+    // или дата добавления. В этом примере предполагаем, что
+    // zoneId - это число (timestamp или порядковый номер)
+    // Реальная логика будет зависеть от структуры ваших данных
+    
+    // Для демонстрации: считаем игру новой, если её ID больше некоторого порога
+    // В реальном приложении нужно использовать дату добавления из данных зоны
+    
+    // Если у зоны есть поле dateAdded, используем его
+    const zone = zones.find(z => z.id === zoneId);
+    if (zone && zone.dateAdded) {
+        const addedDate = new Date(zone.dateAdded);
+        const now = new Date();
+        const daysDiff = (now - addedDate) / (1000 * 60 * 60 * 24);
+        return daysDiff < 7; // Меньше 7 дней
+    }
+    
+    // Если нет поля dateAdded, используем ID как пример
+    // (в реальном приложении это нужно адаптировать)
+    return zoneId > 1000; // Пример: ID больше 1000 считаем новыми
+}
+
 function toTitleCase(str) {
     return str.replace(
         /\w\S*/g,
@@ -64,6 +88,16 @@ async function listZones() {
         const json = await response.json();
         zones = json;
         zones[0].featured = true;
+        
+        // Добавляем тег "new" для новых игр
+        zones.forEach(zone => {
+            if (isNewZone(zone.id)) {
+                if (!zone.special) zone.special = [];
+                if (!zone.special.includes('new')) {
+                    zone.special.push('new');
+                }
+            }
+        });
         
         await fetchPopularity();
         sortZones();
@@ -299,9 +333,17 @@ function displayZones(zones) {
             const tags = document.createElement("div");
             tags.className = "zone-tags";
             
-            file.special.slice(0, 2).forEach(tag => {
+            // Сортируем теги, чтобы "new" был первым
+            const sortedTags = [...file.special];
+            const newIndex = sortedTags.indexOf('new');
+            if (newIndex > -1) {
+                sortedTags.splice(newIndex, 1);
+                sortedTags.unshift('new');
+            }
+            
+            sortedTags.slice(0, 2).forEach(tag => {
                 const tagElement = document.createElement("span");
-                tagElement.className = "zone-tag";
+                tagElement.className = `zone-tag ${tag === 'new' ? 'zone-tag-new' : ''}`;
                 tagElement.textContent = tag;
                 tags.appendChild(tagElement);
             });
@@ -354,6 +396,10 @@ function displayZones(zones) {
     });
     
     lazyImages.forEach(img => imageObserver.observe(img));
+    
+    // Оптимизируем сетку после загрузки
+    setTimeout(optimizeGridLayout, 100);
+    setTimeout(fillEmptyGridSpaces, 150);
 }
 
 function filterZones2() {
@@ -739,43 +785,26 @@ function darkMode() {
     localStorage.setItem('darkMode', document.body.classList.contains("dark-mode"));
 }
 
-function toggleStyle() {
-    const currentStyle = document.getElementById('mainStyle');
-    const button = document.querySelector('.settings-button[onclick="toggleStyle()"]');
-    
-    const currentHref = currentStyle.getAttribute('href');
-    
-    if (currentHref === 'style.css') {
-        currentStyle.setAttribute('href', 'old-style.css');
-        localStorage.setItem('siteStyle', 'old');
-        if (button) button.textContent = "Switch to New Style";
-    } else {
-        currentStyle.setAttribute('href', 'style.css');
-        localStorage.setItem('siteStyle', 'new');
-        if (button) button.textContent = "Switch to Old Style";
-    }
-}
+// УДАЛЕНА ФУНКЦИЯ toggleStyle()
+// function toggleStyle() {
+//     const currentStyle = document.getElementById('mainStyle');
+//     const button = document.querySelector('.settings-button[onclick="toggleStyle()"]');
+//     
+//     const currentHref = currentStyle.getAttribute('href');
+//     
+//     if (currentHref === 'style.css') {
+//         currentStyle.setAttribute('href', 'old-style.css');
+//         localStorage.setItem('siteStyle', 'old');
+//         if (button) button.textContent = "Switch to New Style";
+//     } else {
+//         currentStyle.setAttribute('href', 'style.css');
+//         localStorage.setItem('siteStyle', 'new');
+//         if (button) button.textContent = "Switch to Old Style";
+//     }
+// }
 
 function loadStylePreference() {
-    const savedStyle = localStorage.getItem('siteStyle');
-    const button = document.querySelector('.settings-button[onclick="toggleStyle()"]');
-    const styleElement = document.getElementById('mainStyle');
-    
-    if (savedStyle === 'old') {
-        styleElement.setAttribute('href', 'old-style.css');
-        if (button) button.textContent = "Switch to New Style";
-    } else {
-        styleElement.setAttribute('href', 'style.css');
-        if (button) button.textContent = "Switch to Old Style";
-    }
-}
-
-function loadStylePreference() {
-    const savedStyle = localStorage.getItem('siteStyle');
-    if (savedStyle === 'old') {
-        document.getElementById('mainStyle').setAttribute('href', 'old-style.css');
-    }
-    
+    // Убрана логика переключения старых стилей
     const darkModePreference = localStorage.getItem('darkMode');
     if (darkModePreference === 'true') {
         document.body.classList.add("dark-mode");
@@ -841,8 +870,7 @@ function showSettings() {
     popupBody.innerHTML = `
         <button class="settings-button" onclick="darkMode()">Toggle Dark Mode</button>
         <br><br>
-        <button class="settings-button" onclick="toggleStyle()">Switch to Old/New Style</button>
-        <br><br>
+        <!-- УДАЛЕНА КНОПКА ПЕРЕКЛЮЧЕНИЯ СТИЛЕЙ -->
         <button class="settings-button" onclick="tabCloak()">Tab Cloak</button>
     `;
     popupBody.contentEditable = false;
@@ -1153,7 +1181,7 @@ function fillEmptyGridSpaces() {
         const container = document.getElementById(containerId);
         if (!container) return;
         
-        const items = container.querySelectorAll('.zone-item');
+        const items = container.querySelectorAll('.zone-item:not(.grid-placeholder)');
         if (items.length === 0) return;
         
         const containerStyle = window.getComputedStyle(container);
@@ -1198,6 +1226,7 @@ window.addEventListener('resize', () => {
 const originalDisplayZones = window.displayZones;
 window.displayZones = function(zones) {
     const result = originalDisplayZones.apply(this, arguments);
+    setTimeout(optimizeGridLayout, 50);
     setTimeout(fillEmptyGridSpaces, 100);
     return result;
 };
@@ -1205,6 +1234,7 @@ window.displayZones = function(zones) {
 const originalDisplayFeaturedZones = window.displayFeaturedZones;
 window.displayFeaturedZones = function(zones) {
     const result = originalDisplayFeaturedZones.apply(this, arguments);
+    setTimeout(optimizeGridLayout, 50);
     setTimeout(fillEmptyGridSpaces, 100);
     return result;
 };
@@ -1212,6 +1242,7 @@ window.displayFeaturedZones = function(zones) {
 const originalFilterZones = window.filterZones;
 window.filterZones = function() {
     const result = originalFilterZones.apply(this, arguments);
+    setTimeout(optimizeGridLayout, 50);
     setTimeout(fillEmptyGridSpaces, 100);
     return result;
 };
@@ -1219,6 +1250,7 @@ window.filterZones = function() {
 const originalFilterZones2 = window.filterZones2;
 window.filterZones2 = function() {
     const result = originalFilterZones2.apply(this, arguments);
+    setTimeout(optimizeGridLayout, 50);
     setTimeout(fillEmptyGridSpaces, 100);
     return result;
 };
@@ -1226,6 +1258,7 @@ window.filterZones2 = function() {
 const originalSortZones = window.sortZones;
 window.sortZones = function() {
     const result = originalSortZones.apply(this, arguments);
+    setTimeout(optimizeGridLayout, 50);
     setTimeout(fillEmptyGridSpaces, 100);
     return result;
 };
