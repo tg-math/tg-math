@@ -281,20 +281,18 @@ header {
     filter: brightness(0) invert(1);
 }
 
-/* ОСНОВНОЙ КОНТЕЙНЕР */
 main {
-    max-width: none;
-    margin: 0;
+    max-width: 1400px;
+    margin: 0 auto;
     padding: 2rem 1.5rem;
     flex: 1;
     width: 100%;
     min-height: calc(100vh - 160px);
     display: flex;
     flex-direction: column;
-    position: relative;
 }
 
-/* ОБНОВЛЁННЫЙ СТИЛЬ ДЛЯ DETAILS */
+/* ОБНОВЛЁННЫЙ СТИЛЬ ДЛЯ DETAILS - 40px отступ от низа */
 details {
     background: var(--surface);
     border-radius: var(--radius-lg);
@@ -306,27 +304,14 @@ details {
     flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: 80px; /* Минимальная высота для свёрнутого состояния */
-    width: 100%;
-    position: relative;
+    min-height: calc(100vh - 40px - 160px - 2rem - 2rem); /* 40px отступ от низа + отступы */
 }
 
-/* Когда details открыт - растягиваем на всю ширину */
 details[open] {
     box-shadow: var(--shadow-lg);
     flex: 1;
-    min-height: calc(100vh - 300px); /* Большая высота для открытого состояния */
-    margin-left: -1.5rem;
-    margin-right: -1.5rem;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    width: calc(100% + 3rem);
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    border-left: 1px solid var(--border);
-    border-right: 1px solid var(--border);
 }
 
-/* Сводка (summary) - всегда на всю ширину */
 details summary {
     padding: 1.25rem 1.5rem;
     font-size: 1.25rem;
@@ -342,17 +327,6 @@ details summary {
     transition: var(--transition);
     user-select: none;
     flex-shrink: 0;
-    width: 100%;
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-
-/* Для открытого состояния summary */
-details[open] summary {
-    margin-left: -1.5rem;
-    margin-right: -1.5rem;
-    padding-left: 3rem;
-    padding-right: 3rem;
-    width: calc(100% + 3rem);
 }
 
 details summary:hover {
@@ -376,7 +350,6 @@ details[open] summary::after {
     transform: rotate(-90deg);
 }
 
-/* Базовый стиль для контейнеров с играми */
 #container,
 #featuredZones {
     display: grid;
@@ -386,25 +359,6 @@ details[open] summary::after {
     flex: 1;
     align-content: start;
     min-height: 200px;
-    width: 100%;
-}
-
-/* Контейнеры с играми - растягиваем когда открыто */
-details[open] #container,
-details[open] #featuredZones {
-    margin-left: -1.5rem;
-    margin-right: -1.5rem;
-    padding-left: 3rem;
-    padding-right: 3rem;
-    width: calc(100% + 3rem);
-    flex: 1;
-    min-height: 300px;
-}
-
-/* Свёрнутое состояние - скрываем контент */
-details:not([open]) #container,
-details:not([open]) #featuredZones {
-    display: none;
 }
 
 .zone-container {
@@ -1026,34 +980,6 @@ footer {
     background: var(--primary-hover);
 }
 
-/* Адаптивные стили для больших экранов */
-@media (min-width: 1400px) {
-    details[open] {
-        margin-left: calc((100vw - 1400px) / -2);
-        margin-right: calc((100vw - 1400px) / -2);
-        padding-left: calc((100vw - 1400px) / 2 + 1.5rem);
-        padding-right: calc((100vw - 1400px) / 2 + 1.5rem);
-        width: 100vw;
-    }
-    
-    details[open] summary {
-        margin-left: calc((100vw - 1400px) / -2);
-        margin-right: calc((100vw - 1400px) / -2);
-        padding-left: calc((100vw - 1400px) / 2 + 3rem);
-        padding-right: calc((100vw - 1400px) / 2 + 3rem);
-        width: 100vw;
-    }
-    
-    details[open] #container,
-    details[open] #featuredZones {
-        margin-left: calc((100vw - 1400px) / -2);
-        margin-right: calc((100vw - 1400px) / -2);
-        padding-left: calc((100vw - 1400px) / 2 + 3rem);
-        padding-right: calc((100vw - 1400px) / 2 + 3rem);
-        width: 100vw;
-    }
-}
-
 @media (max-width: 1400px) {
     .header-content {
         padding: 1rem 1.25rem;
@@ -1064,32 +990,11 @@ footer {
         padding: 1.75rem 1.25rem;
     }
     
-    details[open] {
-        margin-left: -1.25rem;
-        margin-right: -1.25rem;
-        padding-left: 1.25rem;
-        padding-right: 1.25rem;
-        width: calc(100% + 2.5rem);
-    }
-    
-    details[open] summary {
-        margin-left: -1.25rem;
-        margin-right: -1.25rem;
-        padding-left: 2.5rem;
-        padding-right: 2.5rem;
-        width: calc(100% + 2.5rem);
-    }
-    
-    details[open] #container,
-    details[open] #featuredZones {
+    #container,
+    #featuredZones {
         grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
         gap: 1.5rem;
         padding: 1.25rem;
-        margin-left: -1.25rem;
-        margin-right: -1.25rem;
-        padding-left: 2.5rem;
-        padding-right: 2.5rem;
-        width: calc(100% + 2.5rem);
     }
     
     .zone-item {
@@ -1098,12 +1003,6 @@ footer {
     
     .zone-img-container {
         height: 180px;
-    }
-    
-    details:not([open]) {
-        margin-left: 0;
-        margin-right: 0;
-        width: 100%;
     }
 }
 
@@ -1117,32 +1016,11 @@ footer {
         padding: 1.5rem 1rem;
     }
     
-    details[open] {
-        margin-left: -1rem;
-        margin-right: -1rem;
-        padding-left: 1rem;
-        padding-right: 1rem;
-        width: calc(100% + 2rem);
-    }
-    
-    details[open] summary {
-        margin-left: -1rem;
-        margin-right: -1rem;
-        padding-left: 2rem;
-        padding-right: 2rem;
-        width: calc(100% + 2rem);
-    }
-    
-    details[open] #container,
-    details[open] #featuredZones {
+    #container,
+    #featuredZones {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 1.25rem;
         padding: 1rem;
-        margin-left: -1rem;
-        margin-right: -1rem;
-        padding-left: 2rem;
-        padding-right: 2rem;
-        width: calc(100% + 2rem);
     }
     
     .zone-item {
@@ -1181,32 +1059,11 @@ footer {
         gap: 1.5rem;
     }
     
-    details[open] {
-        margin-left: -1rem;
-        margin-right: -1rem;
-        padding-left: 1rem;
-        padding-right: 1rem;
-        width: calc(100% + 2rem);
-    }
-    
-    details[open] summary {
-        margin-left: -1rem;
-        margin-right: -1rem;
-        padding-left: 2rem;
-        padding-right: 2rem;
-        width: calc(100% + 2rem);
-    }
-    
-    details[open] #container,
-    details[open] #featuredZones {
+    /* Увеличиваем сетку на мобильных устройствах */
+    #container,
+    #featuredZones {
         grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
         gap: 1rem;
-        padding: 1rem;
-        margin-left: -1rem;
-        margin-right: -1rem;
-        padding-left: 2rem;
-        padding-right: 2rem;
-        width: calc(100% + 2rem);
     }
 }
 
@@ -1261,42 +1118,12 @@ footer {
         min-height: 0;
     }
     
-    details {
-        margin-bottom: 1.5rem;
-        min-height: 60px;
-        border-radius: var(--radius);
-    }
-    
-    details[open] {
-        min-height: calc(100vh - 200px);
-        border-radius: var(--radius-lg);
-        margin-left: -0.75rem;
-        margin-right: -0.75rem;
-        padding-left: 0.75rem;
-        padding-right: 0.75rem;
-        width: calc(100% + 1.5rem);
-    }
-    
-    details[open] summary {
-        margin-left: -0.75rem;
-        margin-right: -0.75rem;
-        padding-left: 1.5rem;
-        padding-right: 1.5rem;
-        width: calc(100% + 1.5rem);
-        font-size: 1.125rem;
-        padding: 1rem 1.25rem;
-    }
-    
-    details[open] #container,
-    details[open] #featuredZones {
+    /* Увеличиваем размер сетки на планшетах */
+    #container,
+    #featuredZones {
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
         gap: 1rem;
         padding: 1rem;
-        margin-left: -0.75rem;
-        margin-right: -0.75rem;
-        padding-left: 1.5rem;
-        padding-right: 1.5rem;
-        width: calc(100% + 1.5rem);
         flex: 1;
         align-content: start;
     }
@@ -1382,52 +1209,29 @@ footer {
         flex-shrink: 0;
     }
     
+    /* Настройки для details на мобильных */
+    details {
+        margin-bottom: 1.5rem;
+        min-height: calc(100vh - 40px - 140px - 1.5rem - 1.5rem);
+    }
+    
+    details summary {
+        padding: 1rem 1.25rem;
+        font-size: 1.125rem;
+    }
+    
     details summary::after {
         right: 1.25rem;
     }
 }
 
 @media (max-width: 480px) {
-    main {
-        padding: 0.75rem 0.5rem;
-    }
-    
-    details {
-        margin-bottom: 1rem;
-        border-radius: var(--radius);
-        min-height: 50px;
-    }
-    
-    details[open] {
-        min-height: calc(100vh - 180px);
-        border-radius: var(--radius-lg);
-        margin-left: -0.5rem;
-        margin-right: -0.5rem;
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
-        width: calc(100% + 1rem);
-    }
-    
-    details[open] summary {
-        margin-left: -0.5rem;
-        margin-right: -0.5rem;
-        padding-left: 1rem;
-        padding-right: 1rem;
-        width: calc(100% + 1rem);
-        padding: 0.875rem 1rem;
-        font-size: 1rem;
-    }
-    
-    details[open] #container,
-    details[open] #featuredZones {
+    /* Увеличиваем размер сетки на маленьких экранах */
+    #container,
+    #featuredZones {
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
         gap: 0.75rem;
         padding: 0.75rem;
-        margin-left: -0.5rem;
-        margin-right: -0.5rem;
-        padding-left: 1rem;
-        padding-right: 1rem;
-        width: calc(100% + 1rem);
     }
     
     .zone-item {
@@ -1465,6 +1269,11 @@ footer {
     .control-button img {
         width: 20px;
         height: 20px;
+    }
+    
+    details summary {
+        padding: 0.875rem 1rem;
+        font-size: 1rem;
     }
     
     details summary::after {
@@ -1638,3 +1447,4 @@ hr {
         box-shadow: none;
     }
 }
+мне нужно было что бы расширялся влево и вправо
